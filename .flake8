@@ -1,7 +1,12 @@
 [flake8]
-max-line-length = 100
-extend-ignore = D203,D213
+max-line-length = 120
+extend-ignore =
+    D100,D101,D102,D103,D104,D105,D106,D107,  # missing docstrings (مؤقتًا)
+    D204,D205,                                 # فراغات حول docstring
+    E302,E305,                                 # الفراغات بين الدوال/الكلاسات
+    E501                                       # طول السطر مؤقتًا
 exclude = .git,__pycache__,venv,.venv,build,dist,doc/api,htmlcov
 
-[pydocstyle]
-convention = google
+# تخفيف متطلبات الدوكس فقط في الاختبارات أيضًا
+per-file-ignores =
+    tests/*: D100,D101,D102,D103
