@@ -1,4 +1,5 @@
 import pytest
+ HEAD
 import random
 from pig_game.dice import Dice
 
@@ -34,3 +35,14 @@ def test_multiple_rolls_within_range():
     for _ in range(100):
         result = dice.roll()
         assert 1 <= result <= dice.SIDES
+
+from pig_game.dice import Dice
+
+def test_roll_returns_valid_value():
+    dice = Dice()
+    for _ in range(100):
+        value = dice.roll()
+        assert 1 <= value <= 6
+        assert isinstance(value, int)
+
+ Implement Dice.roll() and add unit tests
