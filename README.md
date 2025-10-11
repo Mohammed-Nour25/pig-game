@@ -102,3 +102,5 @@ Contributions and improvements are always welcome!
 > You can add screenshots or GIFs of the CLI once the game logic and interface are implemented.
 
 ---
+
+![CI](https://github.com/Mohammed-Nour25/pig-game/actions/workflows/ci.yml/badge.svg)
