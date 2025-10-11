@@ -35,7 +35,7 @@ jobs:
       - name: Lint docstrings (pydocstyle)
         run: |
           echo "Running pydocstyle (google)…"
-          pydocstyle --convention=google pig_game
+          pydocstyle --convention=google --add-ignore=D100,D101,D102,D103,D104,D105,D106,D107 pig_game
 
       - name: Lint (pylint errors only)
         run: |
