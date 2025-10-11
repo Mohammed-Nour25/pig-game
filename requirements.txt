@@ -1,0 +1,9 @@
+pytest
+coverage
+flake8
+flake8-docstrings
+flake8-polyfill
+pylint
+black
+pdoc
+graphviz

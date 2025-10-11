@@ -1,0 +1,9 @@
+[run]
+omit =
+    pig_game/shell.py
+    pig_game/__main__.py
+    */tests/*
+
+[report]
+show_missing = True
+skip_covered = False
