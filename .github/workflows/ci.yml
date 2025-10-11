@@ -26,21 +26,21 @@ jobs:
       - name: Lint (flake8 isolated)
         run: |
           echo "Running flake8 (isolated)…"
-          flake8 --isolated \
+          mkdir -p ci-logs && (flake8 --isolated \
                  --max-line-length 100 \
                  --extend-ignore D203,D213 \
                  --exclude .git,__pycache__,venv,.venv,build,dist,doc/api,htmlcov \
-                 .
+                 .) | tee ci-logs/flake8.txt || true
 
       - name: Lint docstrings (pydocstyle)
         run: |
           echo "Running pydocstyle (google)…"
-          pydocstyle --convention=google --add-ignore=D100,D101,D102,D103,D104,D105,D106,D107 pig_game
+          (pydocstyle --convention=google --add-ignore=D100,D101,D102,D103,D104,D105,D106,D107 pig_game) | tee ci-logs/pydocstyle.txt || true
 
       - name: Lint (pylint errors only)
         run: |
           echo "Running pylint -E…"
-          pylint -E pig_game
+          (pylint -E pig_game) | tee ci-logs/pylint.txt || true) | tee ci-logs/pydocstyle.txt || true
 
       - name: Run tests
         run: |
@@ -52,6 +52,13 @@ jobs:
         run: |
           coverage report -m || true
           coverage html || true
+
+      - name: Upload coverage HTML artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-logs
+          path: ci-logs
 
       - name: Upload coverage HTML artifact
         if: always()
