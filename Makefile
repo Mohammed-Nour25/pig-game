@@ -16,7 +16,7 @@ coverage:
 
 lint:
 	flake8 .
-	pylint pig_game || true
+	pylint -E pig_game || true
 
 fmt:
 	black .
