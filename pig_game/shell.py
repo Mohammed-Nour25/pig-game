@@ -1,9 +1,9 @@
-"""Simple text-based CLI for the Pig game using Python's cmd."""
+"""Simple text-based CLI for the Pig game using Python's cmd module."""
 
 import cmd
 
 try:
-    # We expect the Game class to be implemented later in pig_game.game
+    # Game is expected to be implemented in pig_game.game later.
     from pig_game.game import Game  # type: ignore
 except Exception:
     Game = None  # type: ignore
@@ -29,7 +29,7 @@ class PigShell(cmd.Cmd):
         super().__init__()
         self.game = None  # type: ignore
 
-    # -------- basic helpers --------
+    # ---------------- helpers ----------------
     def _need_game(self) -> bool:
         """Ensure a game instance exists before running a command."""
         if self.game is None:
@@ -37,14 +37,14 @@ class PigShell(cmd.Cmd):
             return False
         return True
 
-    # -------- commands --------
+    # ---------------- commands ----------------
     def do_start(self, arg: str) -> None:
-        """start [goal]  -> start a new game (default 100)."""
+        """start [goal] -> start a new game (default 100)."""
         if Game is None:
             print("Game class not available yet.")
             return
 
-        # goal parsing
+        # parse goal
         goal = 100
         s = arg.strip()
         if s:
@@ -56,19 +56,38 @@ class PigShell(cmd.Cmd):
                 print("Goal must be a positive integer. Using 100.")
                 goal = 100
 
-        # try to build Game
+        # try to build Game safely
         try:
+            # first try with keyword
             self.game = Game(goal_score=goal)  # type: ignore[call-arg]
         except TypeError:
-            self.game = Game()  # type: ignore[call-arg]
-            if hasattr(self.game, "goal_score"):
-                self.game.goal_score = goal  # type: ignore[attr-defined]
+            # fallback: no-arg constructor, then set attribute if it exists
+            try:
+                self.game = Game()  # type: ignore[call-arg]
+                if hasattr(self.game, "goal_score"):
+                    self.game.goal_score = goal  # type: ignore[attr-defined]
+            except NotImplementedError:
+                print("Game core is not implemented yet (M1). Start will be available once Game is ready.")
+                self.game = None
+                return
+            except Exception as exc:
+                print(f"Could not start game: {exc}")
+                self.game = None
+                return
+        except NotImplementedError:
+            print("Game core is not implemented yet (M1). Start will be available once Game is ready.")
+            self.game = None
+            return
+        except Exception as exc:
+            print(f"Could not start game: {exc}")
+            self.game = None
+            return
 
         print(f"New game started. Goal = {goal}.")
         self.do_status("")
 
     def do_status(self, _: str) -> None:
-        """status  -> show scores and current turn."""
+        """status -> show scores and current turn."""
         if not self._need_game():
             return
 
@@ -85,23 +104,23 @@ class PigShell(cmd.Cmd):
                 print(f"{marker} {name:12s} total={total}")
             print(f"Turn points: {turn_points}")
         except Exception:
-            print("Game is running, but status view will be improved once Game is finalized.")
+            print("Game is running, but status view will improve once Game is finalized.")
 
     def do_rules(self, _: str) -> None:
-        """rules   -> show Pig rules."""
+        """rules -> show Pig rules."""
         print(RULES)
 
     def do_quit(self, _: str) -> bool:
-        """quit    -> exit the game."""
+        """quit -> exit the game."""
         print("Bye!")
         return True
 
-    # Ctrl-D/Ctrl-Z to quit
+    # Allow Ctrl-D / Ctrl-Z to quit
     do_EOF = do_quit
 
     # ---- gameplay commands (safe wiring; won't crash if Game isn't ready) ----
     def do_roll(self, _: str) -> None:
-        """roll — roll the dice for the current player."""
+        """roll -> roll the dice for the current player."""
         if not self._need_game():
             return
         try:
@@ -121,26 +140,29 @@ class PigShell(cmd.Cmd):
         self.do_status("")
 
     def do_hold(self, _: str) -> None:
-        """hold    -> bank turn points and switch player."""
+        """hold -> bank turn points and switch player."""
         if not self._need_game():
             return
+
         try:
+            if not hasattr(self.game, "hold"):
+                print("Game class missing 'hold' method. Implement it first.")
+                return
+
             self.game.hold()  # type: ignore[attr-defined]
+            print("Points banked. Turn passed to next player.")
         except NotImplementedError:
-            print("hold is not implemented in Game yet.")
-            return
-        except AttributeError:
-            print("Game.hold() is missing. Please implement it in the Game class.")
-            return
+            print("hold() is not implemented in Game yet.")
         except Exception as exc:
             print(f"hold failed: {exc}")
-            return
+
         self.do_status("")
 
     def do_cheat(self, _: str) -> None:
-        """cheat   -> add +90 to active player (testing)."""
+        """cheat -> add +90 to active player (testing)."""
         if not self._need_game():
             return
+
         g = self.game
         try:
             if hasattr(g, "cheat"):
@@ -157,16 +179,19 @@ class PigShell(cmd.Cmd):
             print("+90 applied.")
         except Exception as exc:
             print(f"cheat failed: {exc}")
+
         self.do_status("")
 
     def do_name(self, arg: str) -> None:
-        """name <new_name>  -> change active player's name."""
+        """name <new_name> -> change active player's name."""
         if not self._need_game():
             return
+
         new = arg.strip()
         if not new:
             print("Usage: name <new_name>")
             return
+
         try:
             players = getattr(self.game, "players", [])
             active = getattr(self.game, "active_player", None) or getattr(self.game, "active_index", 0)
@@ -177,14 +202,14 @@ class PigShell(cmd.Cmd):
                 print("No active player index available.")
         except Exception as exc:
             print(f"name failed: {exc}")
+
         self.do_status("")
 
-    # unknown command
+    # --------------- misc ---------------
     def default(self, line: str) -> None:
         """Handle unknown commands gracefully."""
         print(f"Unknown command: {line!r}. Try 'help'.")
 
-    # ignore empty line (don't repeat last command)
     def emptyline(self) -> None:
         """Do nothing on empty line (avoid repeating the last command)."""
         pass
