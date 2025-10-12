@@ -1,6 +1,9 @@
 """Simple text-based CLI for the Pig game using Python's cmd module."""
 
+from __future__ import annotations
+
 import cmd
+from typing import Optional
 
 try:
     # Game is expected to be implemented in pig_game.game later.
@@ -27,7 +30,7 @@ class PigShell(cmd.Cmd):
 
     def __init__(self) -> None:
         super().__init__()
-        self.game = None  # type: ignore
+        self.game: Optional[Game] = None  # type: ignore[assignment]
 
     # ---------------- helpers ----------------
     def _need_game(self) -> bool:
@@ -58,16 +61,16 @@ class PigShell(cmd.Cmd):
 
         # try to build Game safely
         try:
-            # first try with keyword
+            # preferred: keyword arg
             self.game = Game(goal_score=goal)  # type: ignore[call-arg]
         except TypeError:
             # fallback: no-arg constructor, then set attribute if it exists
             try:
                 self.game = Game()  # type: ignore[call-arg]
                 if hasattr(self.game, "goal_score"):
-                    self.game.goal_score = goal  # type: ignore[attr-defined]
+                    setattr(self.game, "goal_score", goal)  # type: ignore[attr-defined]
             except NotImplementedError:
-                print("Game core is not implemented yet (M1). Start will be available once Game is ready.")
+                print("Game core is not implemented yet (M1). Try again later.")
                 self.game = None
                 return
             except Exception as exc:
@@ -75,7 +78,7 @@ class PigShell(cmd.Cmd):
                 self.game = None
                 return
         except NotImplementedError:
-            print("Game core is not implemented yet (M1). Start will be available once Game is ready.")
+            print("Game core is not implemented yet (M1). Try again later.")
             self.game = None
             return
         except Exception as exc:
@@ -104,7 +107,7 @@ class PigShell(cmd.Cmd):
                 print(f"{marker} {name:12s} total={total}")
             print(f"Turn points: {turn_points}")
         except Exception:
-            print("Game is running, but status view will improve once Game is finalized.")
+            print("Game is running, but status will improve once Game is finalized.")
 
     def do_rules(self, _: str) -> None:
         """rules -> show Pig rules."""
@@ -126,7 +129,7 @@ class PigShell(cmd.Cmd):
         try:
             result = self.game.roll()  # type: ignore[attr-defined]
         except NotImplementedError:
-            print("roll is not implemented in Game yet.")
+            print("roll() is not implemented in Game yet.")
             return
         except AttributeError:
             print("Game.roll() is missing. Please implement it in the Game class.")
@@ -148,7 +151,6 @@ class PigShell(cmd.Cmd):
             if not hasattr(self.game, "hold"):
                 print("Game class missing 'hold' method. Implement it first.")
                 return
-
             self.game.hold()  # type: ignore[attr-defined]
             print("Points banked. Turn passed to next player.")
         except NotImplementedError:
@@ -196,7 +198,7 @@ class PigShell(cmd.Cmd):
             players = getattr(self.game, "players", [])
             active = getattr(self.game, "active_player", None) or getattr(self.game, "active_index", 0)
             if 0 <= int(active) < len(players):
-                players[int(active)].name = new  # type: ignore[attr-defined]
+                setattr(players[int(active)], "name", new)  # type: ignore[attr-defined]
                 print(f"Name set to '{new}'")
             else:
                 print("No active player index available.")
