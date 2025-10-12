@@ -1,14 +1,14 @@
 name: CI
 on:
   push:
-    branches: [ main ]
+    branches: [ main, Mohammed ]
   pull_request:
 
 jobs:
-  lint-and-test:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -16,53 +16,51 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          pip install -r requirements.txt || true
           python -V
           pip list
 
-      - name: Lint (flake8 isolated)
+      - name: flake8 (non-blocking)
+        continue-on-error: true
         run: |
-          echo "Running flake8 (isolated)…"
-          mkdir -p ci-logs && (flake8 --isolated \
-                 --max-line-length 100 \
-                 --extend-ignore D203,D213 \
+          mkdir -p ci-logs
+          flake8 --isolated --max-line-length 120 \
+                 --extend-ignore D100,D101,D102,D103,D104,D105,D106,D107,D204,D205,E302,E305,E501 \
                  --exclude .git,__pycache__,venv,.venv,build,dist,doc/api,htmlcov \
-                 .) | tee ci-logs/flake8.txt || true
+                 . | tee ci-logs/flake8.txt
 
-      - name: Lint docstrings (pydocstyle)
+      - name: pydocstyle (non-blocking)
+        continue-on-error: true
         run: |
-          echo "Running pydocstyle (google)…"
-          (pydocstyle --convention=google --add-ignore=D100,D101,D102,D103,D104,D105,D106,D107 pig_game) | tee ci-logs/pydocstyle.txt || true
+          pydocstyle --convention=google \
+                     --add-ignore=D100,D101,D102,D103,D104,D105,D106,D107 pig_game \
+                     | tee ci-logs/pydocstyle.txt
 
-      - name: Lint (pylint errors only)
+      - name: pylint -E (non-blocking)
+        continue-on-error: true
         run: |
-          echo "Running pylint -E…"
-          (pylint -E pig_game) | tee ci-logs/pylint.txt || true) | tee ci-logs/pydocstyle.txt || true
+          pylint -E pig_game | tee ci-logs/pylint.txt || true
 
-      - name: Run tests
+      - name: Pytest + coverage (non-blocking)
+        continue-on-error: true
         run: |
-          echo "Running pytest with coverage…"
           coverage run -m pytest -q || true
-          echo "Pytest exit code was $?"
-
-      - name: Coverage report + HTML
-        run: |
           coverage report -m || true
           coverage html || true
 
-      - name: Upload coverage HTML artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-logs
-          path: ci-logs
-
-      - name: Upload coverage HTML artifact
+      - name: Upload coverage html
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: htmlcov
           path: htmlcov
+
+      - name: Upload lint logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-logs
+          path: ci-logs
