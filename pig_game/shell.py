@@ -3,7 +3,7 @@
 import cmd
 
 try:
-    # توقع أن Game موجود لاحقًا في pig_game.game
+    # We expect the Game class to be implemented later in pig_game.game
     from pig_game.game import Game  # type: ignore
 except Exception:
     Game = None  # type: ignore
@@ -20,6 +20,8 @@ RULES = (
 
 
 class PigShell(cmd.Cmd):
+    """Command-line shell for the Pig game."""
+
     intro = "Welcome to Pig! Type 'help' or '?' for commands.\n"
     prompt = "(pig) "
 
@@ -29,6 +31,7 @@ class PigShell(cmd.Cmd):
 
     # -------- basic helpers --------
     def _need_game(self) -> bool:
+        """Ensure a game instance exists before running a command."""
         if self.game is None:
             print("No game started. Use: start [goal]")
             return False
@@ -82,7 +85,7 @@ class PigShell(cmd.Cmd):
                 print(f"{marker} {name:12s} total={total}")
             print(f"Turn points: {turn_points}")
         except Exception:
-            print("Game is running, but status view will be better once Game is finalized.")
+            print("Game is running, but status view will be improved once Game is finalized.")
 
     def do_rules(self, _: str) -> None:
         """rules   -> show Pig rules."""
@@ -96,17 +99,25 @@ class PigShell(cmd.Cmd):
     # Ctrl-D/Ctrl-Z to quit
     do_EOF = do_quit
 
-    # The following will work once Game methods exist; handled safely if not.
+    # ---- gameplay commands (safe wiring; won't crash if Game isn't ready) ----
     def do_roll(self, _: str) -> None:
-        """roll    -> roll dice for current player."""
+        """roll — roll the dice for the current player."""
         if not self._need_game():
             return
         try:
-            res = self.game.roll()  # type: ignore[operator]
-            if res is not None:
-                print(f"Rolled: {res}")
-        except Exception as e:
-            print(f"roll failed: {e}")
+            result = self.game.roll()  # type: ignore[attr-defined]
+        except NotImplementedError:
+            print("roll is not implemented in Game yet.")
+            return
+        except AttributeError:
+            print("Game.roll() is missing. Please implement it in the Game class.")
+            return
+        except Exception as exc:
+            print(f"roll failed: {exc}")
+            return
+
+        if result is not None:
+            print(f"Rolled: {result}")
         self.do_status("")
 
     def do_hold(self, _: str) -> None:
@@ -114,9 +125,16 @@ class PigShell(cmd.Cmd):
         if not self._need_game():
             return
         try:
-            self.game.hold()  # type: ignore[operator]
-        except Exception as e:
-            print(f"hold failed: {e}")
+            self.game.hold()  # type: ignore[attr-defined]
+        except NotImplementedError:
+            print("hold is not implemented in Game yet.")
+            return
+        except AttributeError:
+            print("Game.hold() is missing. Please implement it in the Game class.")
+            return
+        except Exception as exc:
+            print(f"hold failed: {exc}")
+            return
         self.do_status("")
 
     def do_cheat(self, _: str) -> None:
@@ -137,8 +155,8 @@ class PigShell(cmd.Cmd):
                     elif hasattr(p, "total_score"):
                         p.total_score += 90  # type: ignore[attr-defined]
             print("+90 applied.")
-        except Exception as e:
-            print(f"cheat failed: {e}")
+        except Exception as exc:
+            print(f"cheat failed: {exc}")
         self.do_status("")
 
     def do_name(self, arg: str) -> None:
@@ -157,18 +175,21 @@ class PigShell(cmd.Cmd):
                 print(f"Name set to '{new}'")
             else:
                 print("No active player index available.")
-        except Exception as e:
-            print(f"name failed: {e}")
+        except Exception as exc:
+            print(f"name failed: {exc}")
         self.do_status("")
 
     # unknown command
     def default(self, line: str) -> None:
+        """Handle unknown commands gracefully."""
         print(f"Unknown command: {line!r}. Try 'help'.")
 
     # ignore empty line (don't repeat last command)
-    def emptyline(self):
+    def emptyline(self) -> None:
+        """Do nothing on empty line (avoid repeating the last command)."""
         pass
 
 
 def main() -> None:
+    """Entry point to start the PigShell CLI loop."""
     PigShell().cmdloop()
