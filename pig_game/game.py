@@ -1,4 +1,4 @@
-"""Game core (M1-2: Game actions).
+"""Game core (M1-2: Game actions + cheat placeholder).
 
 Manages:
 - players list (two players by default)
@@ -12,6 +12,7 @@ Implements:
 - hold(): bank turn_total to active player; reset; switch unless already winner
 - switch_turn(): toggle active player index
 - is_winner(): check if a player reached goal
+- cheat(): add +90 points to the active player (placeholder)
 """
 
 from __future__ import annotations
@@ -113,3 +114,11 @@ class Game:
         """
         idx = self.active_index if player_index is None else player_index
         return self.scores[idx] >= self.goal
+
+    def cheat(self) -> None:
+        """
+        Add +90 points to the active player's score (for testing or fun).
+
+        This is a placeholder cheat method as part of M1-2.
+        """
+        self.scores[self.active_index] += 90
