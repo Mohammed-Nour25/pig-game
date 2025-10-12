@@ -16,8 +16,9 @@ Implements:
 """
 
 from __future__ import annotations
-from typing import List, Optional
+
 import random
+from typing import List, Optional
 
 
 class Game:

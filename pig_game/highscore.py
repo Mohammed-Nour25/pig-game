@@ -9,8 +9,10 @@ TODO (M2):
 
 from __future__ import annotations
 
+
 class HighScore:  # pragma: no cover
     """HighScore facade (skeleton)."""
+
     def __init__(self, path: str | None = None) -> None:
         raise NotImplementedError("Implement HighScore for M2")
 

@@ -9,7 +9,9 @@ TODO (M1 then M2):
 
 from __future__ import annotations
 
+
 class PigShell:  # pragma: no cover
     """cmd-based CLI (skeleton)."""
+
     def __init__(self) -> None:
         raise NotImplementedError("Implement PigShell for M1/M2")

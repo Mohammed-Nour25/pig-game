@@ -7,6 +7,7 @@ TODO (M1):
 
 from __future__ import annotations
 
+
 class Dice:
     """A standard six-sided dice (skeleton)."""
 
