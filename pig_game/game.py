@@ -1,4 +1,4 @@
-"""Game core (M1-2: Create Game class only).
+"""Game core (M1-2: Game actions).
 
 Manages:
 - players list (two players by default)
@@ -7,16 +7,20 @@ Manages:
 - active player index
 - goal score
 
-Note:
-- Gameplay actions (roll, hold, switch_turn, is_winner) are not implemented yet.
+Implements:
+- roll(): add dice value; if 1 → bust (reset turn) and switch turn
+- hold(): bank turn_total to active player; reset; switch unless already winner
+- switch_turn(): toggle active player index
+- is_winner(): check if a player reached goal
 """
 
 from __future__ import annotations
 from typing import List, Optional
+import random
 
 
 class Game:
-    """Core Pig game state manager (structure only)."""
+    """Core Pig game logic."""
 
     def __init__(self, goal: int = 100, players: Optional[List[str]] = None) -> None:
         """
@@ -58,15 +62,54 @@ class Game:
         """Return the non-active player's name."""
         return self.players[1 - self.active_index]
 
-    # --- Placeholders for future implementation ---
-    def roll(self):
-        raise NotImplementedError("Implement Game.roll in the next task")
+    # --- Core actions ---
+    def roll(self) -> int:
+        """
+        Roll a six-sided die and update the turn state.
 
-    def hold(self):
-        raise NotImplementedError("Implement Game.hold in the next task")
+        Returns:
+            The rolled value in [1, 6].
 
-    def switch_turn(self):
-        raise NotImplementedError("Implement Game.switch_turn in the next task")
+        Rules:
+            - If value == 1: bust → reset turn_total and switch turn.
+            - Else: add value to turn_total and keep the same player.
+        """
+        value = random.randint(1, 6)
+        if value == 1:
+            self.turn_total = 0
+            self.switch_turn()
+        else:
+            self.turn_total += value
+        return value
 
-    def is_winner(self):
-        raise NotImplementedError("Implement Game.is_winner in the next task")
+    def hold(self) -> None:
+        """
+        Bank the current turn_total into the active player's score.
+
+        After holding:
+            - turn_total resets to 0.
+            - If the active player has not yet won, switch the turn.
+            - If the active player reached the goal, keep the turn (game won).
+        """
+        self.scores[self.active_index] += self.turn_total
+        self.turn_total = 0
+
+        if not self.is_winner(self.active_index):
+            self.switch_turn()
+
+    def switch_turn(self) -> None:
+        """Toggle the active player index (0 ↔ 1)."""
+        self.active_index = 1 - self.active_index
+
+    def is_winner(self, player_index: Optional[int] = None) -> bool:
+        """
+        Check whether a player has reached the goal score.
+
+        Args:
+            player_index: Index of the player to check; defaults to the active player.
+
+        Returns:
+            True if the player's score >= goal, else False.
+        """
+        idx = self.active_index if player_index is None else player_index
+        return self.scores[idx] >= self.goal
