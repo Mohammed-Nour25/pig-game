@@ -1,5 +1,4 @@
-def main() -> None:
-    print("Pig CLI not implemented yet. Run `python -m pig_game` after implementing shell.PigShell.")
+from pig_game.shell import main
 
 if __name__ == "__main__":
     main()
