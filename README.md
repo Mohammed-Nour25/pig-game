@@ -87,6 +87,46 @@ python -m pig_game
 
 ---
 
+## 🎮 Command-Line Interface (CLI)
+
+You can play the Pig game directly from the terminal using the built-in CLI.
+
+### How to run
+```bash
+python -m pig_game
+```
+
+### Available commands
+- `rules` → show game rules  
+- `start [goal]` → start a new game (default = 100)  
+- `status` → show current player and scores  
+- `roll` → roll the die for the current player  
+- `hold` → bank points and switch turn  
+- `name <new_name>` → change the active player's name  
+- `cheat` → add +90 points (for testing)  
+- `quit` → exit the game  
+
+### Example session
+```
+$ python -m pig_game
+Welcome to Pig! Type 'help' or '?' for commands.
+
+(pig) rules
+Pig — Rules:
+- Players take turns rolling one die.
+- Add roll to turn points...
+(pig) start
+New game started. Goal = 100.
+(pig) roll
+Rolled: 4
+(pig) hold
+Points banked. Turn passed to next player.
+(pig) quit
+Bye!
+```
+
+---
+
 ## 📜 License
 This project is licensed under the [MIT License](LICENSE.md).
 
