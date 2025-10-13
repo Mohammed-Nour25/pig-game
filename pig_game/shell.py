@@ -22,6 +22,27 @@ RULES = (
 )
 
 
+# ---------------- helpers (generic getters) ----------------
+def _safe_get(obj, *names, default=None):
+    """Try multiple attribute names or callables and return the first non-None value."""
+    for name in names:
+        if hasattr(obj, name):
+            val = getattr(obj, name)
+            try:
+                return val() if callable(val) else val
+            except Exception:
+                continue
+    return default
+
+
+def _as_int(x, default=0):
+    """Cast to int, or return default on failure."""
+    try:
+        return int(x)
+    except Exception:
+        return default
+
+
 class PigShell(cmd.Cmd):
     """Command-line shell for the Pig game."""
 
@@ -39,6 +60,45 @@ class PigShell(cmd.Cmd):
             print("No game started. Use: start [goal]")
             return False
         return True
+
+    def _render_status(self) -> None:
+        """Pretty status: players, scores, turn points, goal, active arrow, winner if any."""
+        g = self.game
+        if g is None:
+            print("No game started. Use: start [goal]")
+            return
+
+        players = _safe_get(g, "players") or []
+        active = _as_int(_safe_get(g, "active_player", "active_index", default=0))
+        turn_points = _as_int(_safe_get(g, "turn_points", default=0))
+        goal = _as_int(_safe_get(g, "goal_score", "goal", default=100))
+        winner = _safe_get(g, "winner", "get_winner")  # could be idx/name/player/None
+
+        lines = [f"Goal: {goal}"]
+        for i, p in enumerate(players):
+            name = _safe_get(p, "name", default=f"Player{i+1}")
+            total = _as_int(_safe_get(p, "score", "total_score", default=0))
+            mark = "←" if (i == active or bool(_safe_get(p, "is_active", default=False))) else " "
+            lines.append(f"{mark} {name:12s} total={total}")
+        lines.append(f"Turn points: {turn_points}")
+        print("\n".join(lines))
+
+        if winner:
+            # winner could be an index, a player object, or a name/id
+            if isinstance(winner, int) and 0 <= winner < len(players):
+                win_name = _safe_get(players[winner], "name", default=f"Player{winner+1}")
+            elif hasattr(winner, "name"):
+                win_name = _safe_get(winner, "name", default=str(winner))
+            else:
+                win_name = str(winner)
+            print(f"🏆 Winner: {win_name}! Type 'start' to play again.")
+
+    def _maybe_announce_winner(self) -> None:
+        g = self.game
+        if g is None:
+            return
+        if _safe_get(g, "winner", "get_winner"):
+            self._render_status()
 
     # ---------------- commands ----------------
     def do_start(self, arg: str) -> None:
@@ -93,19 +153,8 @@ class PigShell(cmd.Cmd):
         """status -> show scores and current turn."""
         if not self._need_game():
             return
-
-        g = self.game
         try:
-            players = getattr(g, "players", [])
-            active = getattr(g, "active_player", None) or getattr(g, "active_index", 0)
-            turn_points = getattr(g, "turn_points", 0)
-
-            for i, p in enumerate(players):
-                name = getattr(p, "name", f"Player{i+1}")
-                total = getattr(p, "score", getattr(p, "total_score", 0))
-                marker = "<-" if (i == active or getattr(p, "is_active", False)) else "  "
-                print(f"{marker} {name:12s} total={total}")
-            print(f"Turn points: {turn_points}")
+            self._render_status()
         except Exception:
             print("Game is running, but status will improve once Game is finalized.")
 
@@ -127,20 +176,21 @@ class PigShell(cmd.Cmd):
         if not self._need_game():
             return
         try:
+            if not hasattr(self.game, "roll"):
+                print("Game.roll() is missing. Please implement it in the Game class.")
+                return
             result = self.game.roll()  # type: ignore[attr-defined]
+            if result is not None:
+                print(f"Rolled: {result}")
         except NotImplementedError:
             print("roll() is not implemented in Game yet.")
-            return
-        except AttributeError:
-            print("Game.roll() is missing. Please implement it in the Game class.")
             return
         except Exception as exc:
             print(f"roll failed: {exc}")
             return
 
-        if result is not None:
-            print(f"Rolled: {result}")
-        self.do_status("")
+        self._render_status()
+        self._maybe_announce_winner()
 
     def do_hold(self, _: str) -> None:
         """hold -> bank turn points and switch player."""
@@ -158,7 +208,8 @@ class PigShell(cmd.Cmd):
         except Exception as exc:
             print(f"hold failed: {exc}")
 
-        self.do_status("")
+        self._render_status()
+        self._maybe_announce_winner()
 
     def do_cheat(self, _: str) -> None:
         """cheat -> add +90 to active player (testing)."""
@@ -170,8 +221,8 @@ class PigShell(cmd.Cmd):
             if hasattr(g, "cheat"):
                 g.cheat(90)  # type: ignore[attr-defined]
             else:
-                players = getattr(g, "players", [])
-                active = getattr(g, "active_player", None) or getattr(g, "active_index", 0)
+                players = _safe_get(g, "players") or []
+                active = _as_int(_safe_get(g, "active_player", "active_index", default=0))
                 if 0 <= int(active) < len(players):
                     p = players[int(active)]
                     if hasattr(p, "score"):
@@ -182,7 +233,8 @@ class PigShell(cmd.Cmd):
         except Exception as exc:
             print(f"cheat failed: {exc}")
 
-        self.do_status("")
+        self._render_status()
+        self._maybe_announce_winner()
 
     def do_name(self, arg: str) -> None:
         """name <new_name> -> change active player's name."""
@@ -195,8 +247,8 @@ class PigShell(cmd.Cmd):
             return
 
         try:
-            players = getattr(self.game, "players", [])
-            active = getattr(self.game, "active_player", None) or getattr(self.game, "active_index", 0)
+            players = _safe_get(self.game, "players") or []
+            active = _as_int(_safe_get(self.game, "active_player", "active_index", default=0))
             if 0 <= int(active) < len(players):
                 setattr(players[int(active)], "name", new)  # type: ignore[attr-defined]
                 print(f"Name set to '{new}'")
@@ -205,7 +257,7 @@ class PigShell(cmd.Cmd):
         except Exception as exc:
             print(f"name failed: {exc}")
 
-        self.do_status("")
+        self._render_status()
 
     # --------------- misc ---------------
     def default(self, line: str) -> None:
