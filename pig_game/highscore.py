@@ -1,17 +1,16 @@
-"""HighScore storage system (step 3: add rename_player).
+"""HighScore storage system (step 4: record_result + UTC timestamps).
 
-This step sets up persistent JSON storage with minimal schema and
-adds player registration and renaming support.
-
-{
-  "players": {},
-  "games": []
-}
+Persistent JSON storage with minimal schema, plus:
+- register_player()
+- rename_player()
+- record_result() with timezone-aware UTC timestamps
+- table() sorted view
 """
 
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
@@ -104,8 +103,6 @@ class HighScore:
     # ---------- results ----------
     def record_result(self, winner_pid: str, loser_pid: str) -> None:
         """Record one match result: update wins/losses and append a game log."""
-        from datetime import datetime
-
         # Basic validation
         players = self.data.get("players", {})
         if winner_pid not in players or loser_pid not in players:
@@ -118,7 +115,6 @@ class HighScore:
             p = players[pid]
             p["wins"] = int(p.get("wins", 0))
             p["losses"] = int(p.get("losses", 0))
-            # keep optional "score" if present; not required for this step
 
         # Update stats
         players[winner_pid]["wins"] += 1
@@ -129,12 +125,16 @@ class HighScore:
         if not isinstance(games, list):
             self.data["games"] = games = []
 
-        # Append a compact log entry (UTC ISO timestamp)
+        # Append a compact log entry (timezone-aware UTC -> trailing Z)
+        ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if ts.endswith("+00:00"):
+            ts = ts[:-6] + "Z"
+
         games.append(
             {
                 "winner": winner_pid,
                 "loser": loser_pid,
-                "timestamp": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                "timestamp": ts,
             }
         )
 
