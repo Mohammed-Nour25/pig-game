@@ -1,7 +1,7 @@
-"""HighScore storage system (step 2: add register_player).
+"""HighScore storage system (step 3: add rename_player).
 
 This step sets up persistent JSON storage with minimal schema and
-adds player registration support.
+adds player registration and renaming support.
 
 {
   "players": {},
@@ -83,6 +83,24 @@ class HighScore:
         # Save automatically
         self.save()
         return new_id
+
+    def rename_player(self, pid: str, new_name: str) -> None:
+        """Rename an existing player (must not conflict with other names)."""
+        new_name = new_name.strip()
+        if not new_name:
+            raise ValueError("New name cannot be empty")
+
+        if pid not in self.data["players"]:
+            raise KeyError(f"Player ID {pid} not found")
+
+        # Check if another player already uses this name
+        for other_pid, info in self.data["players"].items():
+            if other_pid != pid and info.get("name", "").lower() == new_name.lower():
+                raise ValueError(f"Name '{new_name}' already taken")
+
+        # Update and save
+        self.data["players"][pid]["name"] = new_name
+        self.save()
 
     # ---------- helpers ----------
     def _write_json(self, content: Dict[str, Any]) -> None:
