@@ -77,6 +77,8 @@ class PigShell(cmd.Cmd):
 
         print(_line("═", 40))
         print(f"🎯 Goal: {goal} | 🎲 Turn points: {turn_points}")
+ print("⚠️  No game started. Use: start [goal]")
+ print("⚠️  No game started. Use: start [goal]")
         print(_line("─", 40))
         for i, p in enumerate(players):
             name = _safe_get(p, "name", default=f"Player{i+1}")
