@@ -1,6 +1,8 @@
-"""HighScore storage system (step 1: load/save JSON only).
+"""HighScore storage system (step 2: add register_player).
 
-This step sets up persistent JSON storage with a minimal schema:
+This step sets up persistent JSON storage with minimal schema and
+adds player registration support.
+
 {
   "players": {},
   "games": []
@@ -54,6 +56,33 @@ class HighScore:
         """Save current data to JSON file."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._write_json(self.data)
+
+    # ---------- player management ----------
+    def register_player(self, name: str) -> str:
+        """Register a new player or return existing player ID."""
+        name = name.strip()
+        if not name:
+            raise ValueError("Player name cannot be empty")
+
+        # Check if player already exists (case-insensitive)
+        for pid, info in self.data["players"].items():
+            if info.get("name", "").lower() == name.lower():
+                return pid
+
+        # Assign new player ID
+        new_id = f"p{len(self.data['players']) + 1}"
+
+        # Create entry
+        self.data["players"][new_id] = {
+            "name": name,
+            "wins": 0,
+            "losses": 0,
+            "score": 0,
+        }
+
+        # Save automatically
+        self.save()
+        return new_id
 
     # ---------- helpers ----------
     def _write_json(self, content: Dict[str, Any]) -> None:
