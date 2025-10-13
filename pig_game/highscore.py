@@ -101,6 +101,46 @@ class HighScore:
         # Update and save
         self.data["players"][pid]["name"] = new_name
         self.save()
+    # ---------- results ----------
+    def record_result(self, winner_pid: str, loser_pid: str) -> None:
+        """Record one match result: update wins/losses and append a game log."""
+        from datetime import datetime
+
+        # Basic validation
+        players = self.data.get("players", {})
+        if winner_pid not in players or loser_pid not in players:
+            raise KeyError("Both winner and loser must be valid player IDs")
+        if winner_pid == loser_pid:
+            raise ValueError("Winner and loser cannot be the same player")
+
+        # Normalize counters (in case old rows miss some keys)
+        for pid in (winner_pid, loser_pid):
+            p = players[pid]
+            p["wins"] = int(p.get("wins", 0))
+            p["losses"] = int(p.get("losses", 0))
+            # keep optional "score" if present; not required for this step
+
+        # Update stats
+        players[winner_pid]["wins"] += 1
+        players[loser_pid]["losses"] += 1
+
+        # Ensure games list exists
+        games = self.data.setdefault("games", [])
+        if not isinstance(games, list):
+            self.data["games"] = games = []
+
+        # Append a compact log entry (UTC ISO timestamp)
+        games.append(
+            {
+                "winner": winner_pid,
+                "loser": loser_pid,
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            }
+        )
+
+        # Persist
+        self.save()
+
 
     # ---------- helpers ----------
     def _write_json(self, content: Dict[str, Any]) -> None:
