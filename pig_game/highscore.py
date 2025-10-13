@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 DATA_DIR = Path("pig_game") / "data"
 DEFAULT_PATH = DATA_DIR / "highscores.json"
@@ -101,6 +100,7 @@ class HighScore:
         # Update and save
         self.data["players"][pid]["name"] = new_name
         self.save()
+
     # ---------- results ----------
     def record_result(self, winner_pid: str, loser_pid: str) -> None:
         """Record one match result: update wins/losses and append a game log."""
@@ -141,6 +141,27 @@ class HighScore:
         # Persist
         self.save()
 
+    # ---------- reporting ----------
+    def table(self) -> list[tuple[str, str, int, int]]:
+        """Return a sorted table of (pid, name, wins, losses).
+
+        Sort order:
+          - wins:  descending
+          - losses: ascending
+          - name:   ascending (case-insensitive)
+        """
+        players = self.data.get("players", {})
+        rows: list[tuple[str, str, int, int]] = []
+
+        for pid, info in players.items():
+            name = str(info.get("name", ""))
+            wins = int(info.get("wins", 0))
+            losses = int(info.get("losses", 0))
+            rows.append((pid, name, wins, losses))
+
+        # Sort by: wins DESC, losses ASC, name ASC (case-insensitive)
+        rows.sort(key=lambda r: (-r[2], r[3], r[1].lower()))
+        return rows
 
     # ---------- helpers ----------
     def _write_json(self, content: Dict[str, Any]) -> None:
