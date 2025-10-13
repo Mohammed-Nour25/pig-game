@@ -1,29 +1,61 @@
-"""HighScore JSON storage (skeleton).
-TODO (M2):
-- File: pig_game/data/highscores.json (create folder if missing)
-- players: { pid: {name, plays, wins, losses, last_updated} }
-- games: [{winner_pid, loser_pid, date}]
-- Facade: register_player(name)->pid, rename_player(pid,new_name), record_result(...), table()
-- ≥90% coverage, docstrings
+"""HighScore storage system (step 1: load/save JSON only).
+
+This step sets up persistent JSON storage with a minimal schema:
+{
+  "players": {},
+  "games": []
+}
 """
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from typing import Dict, Any
 
-class HighScore:  # pragma: no cover
-    """HighScore facade (skeleton)."""
 
-    def __init__(self, path: str | None = None) -> None:
-        raise NotImplementedError("Implement HighScore for M2")
+DATA_DIR = Path("pig_game") / "data"
+DEFAULT_PATH = DATA_DIR / "highscores.json"
 
-    def register_player(self, name: str) -> str:
-        raise NotImplementedError("Implement register_player for M2")
 
-    def rename_player(self, pid: str, new_name: str) -> None:
-        raise NotImplementedError("Implement rename_player for M2")
+class HighScore:
+    """Basic JSON storage for player and game data."""
 
-    def record_result(self, winner_pid: str, loser_pid: str) -> None:
-        raise NotImplementedError("Implement record_result for M2")
+    def __init__(self, path: str | Path = DEFAULT_PATH) -> None:
+        self.path: Path = Path(path)
+        # In-memory structure; will be overwritten by `load()`.
+        self.data: Dict[str, Any] = {"players": {}, "games": []}
+        self.load()
 
-    def table(self):
-        raise NotImplementedError("Implement table for M2")
+    # ---------- persistence ----------
+    def load(self) -> None:
+        """Load JSON file; if missing or invalid, create a fresh one."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists():
+            self._write_json({"players": {}, "games": []})
+            self.data = {"players": {}, "games": []}
+            return
+
+        try:
+            with self.path.open("r", encoding="utf-8") as f:
+                self.data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            # If file is empty/corrupted, reset to a minimal valid schema.
+            self.data = {"players": {}, "games": []}
+            self._write_json(self.data)
+
+        # Normalize minimal keys if they are missing
+        if "players" not in self.data or not isinstance(self.data["players"], dict):
+            self.data["players"] = {}
+        if "games" not in self.data or not isinstance(self.data["games"], list):
+            self.data["games"] = []
+
+    def save(self) -> None:
+        """Save current data to JSON file."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._write_json(self.data)
+
+    # ---------- helpers ----------
+    def _write_json(self, content: Dict[str, Any]) -> None:
+        with self.path.open("w", encoding="utf-8") as f:
+            json.dump(content, f, ensure_ascii=False, indent=2)
