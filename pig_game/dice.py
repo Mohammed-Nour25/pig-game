@@ -2,6 +2,7 @@ import random
 from typing import Final
 
 
+
 class Dice:
     """
     A class representing a standard six-sided dice.

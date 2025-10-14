@@ -1,117 +1,125 @@
-"""Minimal Game core for Pig to make the CLI usable (robust to partial M1)."""
+"""Game core (M1-2: Game actions + cheat placeholder).
+
+Manages:
+- players list (two players by default)
+- per-player scores
+- current turn total
+- active player index
+- goal score
+
+Implements:
+- roll(): add dice value; if 1 → bust (reset turn) and switch turn
+- hold(): bank turn_total to active player; reset; switch unless already winner
+- switch_turn(): toggle active player index
+- is_winner(): check if a player reached goal
+- cheat(): add +90 points to the active player (placeholder)
+"""
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional
 
-# ---------- Fallback types ----------
-@dataclass
-class _FallbackPlayer:
-    name: str
-    score: int = 0
-    is_computer: bool = False
-
-
-class _FallbackDice:
-    import random
-
-    def roll(self) -> int:
-        return self.random.randint(1, 6)
-
-
-# ---------- Safe factories ----------
-def _make_player(name: str):
-    """Try to build the team's Player; fall back to a tiny local one."""
-    try:
-        from pig_game.player import Player  # type: ignore
-        try:
-            return Player(name)  # type: ignore[call-arg]
-        except Exception:
-            # Class موجودة لكن غير جاهزة — نرجع fallback
-            return _FallbackPlayer(name)
-    except Exception:
-        # Module/player غير موجود — نرجع fallback
-        return _FallbackPlayer(name)
-
-
-def _make_dice():
-    """Try to build the team's Dice; fall back to a tiny local one."""
-    try:
-        from pig_game.dice import Dice  # type: ignore
-        try:
-            return Dice()  # type: ignore[call-arg]
-        except Exception:
-            return _FallbackDice()
-    except Exception:
-        return _FallbackDice()
+import random
+from typing import List, Optional
 
 
 class Game:
-    """Core Pig game logic (minimal, two players)."""
+    """Core Pig game logic."""
 
-    def __init__(self, goal_score: int = 100) -> None:
-        if not isinstance(goal_score, int) or goal_score < 1:
-            raise ValueError("goal_score must be a positive integer")
+    def __init__(self, goal: int = 100, players: Optional[List[str]] = None) -> None:
+        """
+        Initialize a new game state.
 
-        self.goal_score = goal_score
-        self.players = [_make_player("Player1"), _make_player("Player2")]
-        self.active_index: int = 0
-        self.turn_points: int = 0
-        self._dice = _make_dice()
+        Args:
+            goal: Target score to win (must be > 0).
+            players: Optional list of two player names.
+                     Defaults to ["Player 1", "Player 2"].
+        """
+        if goal <= 0:
+            raise ValueError("goal must be positive")
 
-    # ---------- helpers ----------
+        self.goal: int = goal
+
+        # Initialize players
+        if players is None:
+            players = ["Player 1", "Player 2"]
+        if len(players) != 2:
+            raise ValueError("Pig requires exactly two players")
+
+        self.players: List[str] = players
+
+        # Initialize scores for each player
+        self.scores: List[int] = [0, 0]
+
+        # Track current turn total and active player
+        self.turn_total: int = 0
+        self.active_index: int = 0  # 0 = Player 1, 1 = Player 2
+
+    # --- Convenience properties ---
     @property
-    def active_player(self) -> int:
-        return self.active_index
-
-    def _active(self):
+    def active(self) -> str:
+        """Return the active player's name."""
         return self.players[self.active_index]
 
-    # ---------- actions ----------
+    @property
+    def waiting(self) -> str:
+        """Return the non-active player's name."""
+        return self.players[1 - self.active_index]
+
+    # --- Core actions ---
     def roll(self) -> int:
-        """Roll the dice. If 1 → bust (turn_points = 0) & switch turn."""
-        value = int(self._dice.roll())
+        """
+        Roll a six-sided die and update the turn state.
+
+        Returns:
+            The rolled value in [1, 6].
+
+        Rules:
+            - If value == 1: bust → reset turn_total and switch turn.
+            - Else: add value to turn_total and keep the same player.
+        """
+        value = random.randint(1, 6)
         if value == 1:
-            self.turn_points = 0
+            self.turn_total = 0
             self.switch_turn()
         else:
-            self.turn_points += value
+            self.turn_total += value
         return value
 
-    def hold(self) -> Optional[str]:
-        """Bank turn points to total score, reset, check win, then switch."""
-        p = self._active()
-        # player may expose `score` or `total_score`
-        if hasattr(p, "score"):
-            p.score += self.turn_points  # type: ignore[attr-defined]
-        elif hasattr(p, "total_score"):
-            p.total_score += self.turn_points  # type: ignore[attr-defined]
-        self.turn_points = 0
+    def hold(self) -> None:
+        """
+        Bank the current turn_total into the active player's score.
 
-        if self.is_winner():
-            return "win"
+        After holding:
+            - turn_total resets to 0.
+            - If the active player has not yet won, switch the turn.
+            - If the active player reached the goal, keep the turn (game won).
+        """
+        self.scores[self.active_index] += self.turn_total
+        self.turn_total = 0
 
-        self.switch_turn()
-        return None
+        if not self.is_winner(self.active_index):
+            self.switch_turn()
 
     def switch_turn(self) -> None:
+        """Toggle the active player index (0 ↔ 1)."""
         self.active_index = 1 - self.active_index
 
-    def is_winner(self) -> bool:
-        p = self._active()
-        total = getattr(p, "score", getattr(p, "total_score", 0))
-        return int(total) >= int(self.goal_score)
+    def is_winner(self, player_index: Optional[int] = None) -> bool:
+        """
+        Check whether a player has reached the goal score.
 
-    # ---------- helpers for dev/testing ----------
-    def set_names(self, p1: str, p2: str) -> None:
-        self.players[0].name = p1
-        self.players[1].name = p2
+        Args:
+            player_index: Index of the player to check; defaults to the active player.
 
-    def cheat(self, points: int = 90) -> None:
-        if points < 0:
-            points = 0
-        p = self._active()
-        if hasattr(p, "score"):
-            p.score += points  # type: ignore[attr-defined]
-        elif hasattr(p, "total_score"):
-            p.total_score += points  # type: ignore[attr-defined]
+        Returns:
+            True if the player's score >= goal, else False.
+        """
+        idx = self.active_index if player_index is None else player_index
+        return self.scores[idx] >= self.goal
+
+    def cheat(self) -> None:
+        """
+        Add +90 points to the active player's score (for testing or fun).
+
+        This is a placeholder cheat method as part of M1-2.
+        """
+        self.scores[self.active_index] += 90

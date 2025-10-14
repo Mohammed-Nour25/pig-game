@@ -1,27 +1,169 @@
-"""HighScore JSON storage (skeleton).
-TODO (M2):
-- File: pig_game/data/highscores.json (create folder if missing)
-- players: { pid: {name, plays, wins, losses, last_updated} }
-- games: [{winner_pid, loser_pid, date}]
-- Facade: register_player(name)->pid, rename_player(pid,new_name), record_result(...), table()
-- ≥90% coverage, docstrings
+"""HighScore storage system (step 4: record_result + UTC timestamps).
+
+Persistent JSON storage with minimal schema, plus:
+- register_player()
+- rename_player()
+- record_result() with timezone-aware UTC timestamps
+- table() sorted view
 """
 
 from __future__ import annotations
 
-class HighScore:  # pragma: no cover
-    """HighScore facade (skeleton)."""
-    def __init__(self, path: str | None = None) -> None:
-        raise NotImplementedError("Implement HighScore for M2")
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict
 
+DATA_DIR = Path("pig_game") / "data"
+DEFAULT_PATH = DATA_DIR / "highscores.json"
+
+
+class HighScore:
+    """Basic JSON storage for player and game data."""
+
+    def __init__(self, path: str | Path = DEFAULT_PATH) -> None:
+        self.path: Path = Path(path)
+        # In-memory structure; will be overwritten by `load()`.
+        self.data: Dict[str, Any] = {"players": {}, "games": []}
+        self.load()
+
+    # ---------- persistence ----------
+    def load(self) -> None:
+        """Load JSON file; if missing or invalid, create a fresh one."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists():
+            self._write_json({"players": {}, "games": []})
+            self.data = {"players": {}, "games": []}
+            return
+
+        try:
+            with self.path.open("r", encoding="utf-8") as f:
+                self.data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            # If file is empty/corrupted, reset to a minimal valid schema.
+            self.data = {"players": {}, "games": []}
+            self._write_json(self.data)
+
+        # Normalize minimal keys if they are missing
+        if "players" not in self.data or not isinstance(self.data["players"], dict):
+            self.data["players"] = {}
+        if "games" not in self.data or not isinstance(self.data["games"], list):
+            self.data["games"] = []
+
+    def save(self) -> None:
+        """Save current data to JSON file."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._write_json(self.data)
+
+    # ---------- player management ----------
     def register_player(self, name: str) -> str:
-        raise NotImplementedError("Implement register_player for M2")
+        """Register a new player or return existing player ID."""
+        name = name.strip()
+        if not name:
+            raise ValueError("Player name cannot be empty")
+
+        # Check if player already exists (case-insensitive)
+        for pid, info in self.data["players"].items():
+            if info.get("name", "").lower() == name.lower():
+                return pid
+
+        # Assign new player ID
+        new_id = f"p{len(self.data['players']) + 1}"
+
+        # Create entry
+        self.data["players"][new_id] = {
+            "name": name,
+            "wins": 0,
+            "losses": 0,
+            "score": 0,
+        }
+
+        # Save automatically
+        self.save()
+        return new_id
 
     def rename_player(self, pid: str, new_name: str) -> None:
-        raise NotImplementedError("Implement rename_player for M2")
+        """Rename an existing player (must not conflict with other names)."""
+        new_name = new_name.strip()
+        if not new_name:
+            raise ValueError("New name cannot be empty")
 
+        if pid not in self.data["players"]:
+            raise KeyError(f"Player ID {pid} not found")
+
+        # Check if another player already uses this name
+        for other_pid, info in self.data["players"].items():
+            if other_pid != pid and info.get("name", "").lower() == new_name.lower():
+                raise ValueError(f"Name '{new_name}' already taken")
+
+        # Update and save
+        self.data["players"][pid]["name"] = new_name
+        self.save()
+
+    # ---------- results ----------
     def record_result(self, winner_pid: str, loser_pid: str) -> None:
-        raise NotImplementedError("Implement record_result for M2")
+        """Record one match result: update wins/losses and append a game log."""
+        # Basic validation
+        players = self.data.get("players", {})
+        if winner_pid not in players or loser_pid not in players:
+            raise KeyError("Both winner and loser must be valid player IDs")
+        if winner_pid == loser_pid:
+            raise ValueError("Winner and loser cannot be the same player")
 
-    def table(self):
-        raise NotImplementedError("Implement table for M2")
+        # Normalize counters (in case old rows miss some keys)
+        for pid in (winner_pid, loser_pid):
+            p = players[pid]
+            p["wins"] = int(p.get("wins", 0))
+            p["losses"] = int(p.get("losses", 0))
+
+        # Update stats
+        players[winner_pid]["wins"] += 1
+        players[loser_pid]["losses"] += 1
+
+        # Ensure games list exists
+        games = self.data.setdefault("games", [])
+        if not isinstance(games, list):
+            self.data["games"] = games = []
+
+        # Append a compact log entry (timezone-aware UTC -> trailing Z)
+        ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if ts.endswith("+00:00"):
+            ts = ts[:-6] + "Z"
+
+        games.append(
+            {
+                "winner": winner_pid,
+                "loser": loser_pid,
+                "timestamp": ts,
+            }
+        )
+
+        # Persist
+        self.save()
+
+    # ---------- reporting ----------
+    def table(self) -> list[tuple[str, str, int, int]]:
+        """Return a sorted table of (pid, name, wins, losses).
+
+        Sort order:
+          - wins:  descending
+          - losses: ascending
+          - name:   ascending (case-insensitive)
+        """
+        players = self.data.get("players", {})
+        rows: list[tuple[str, str, int, int]] = []
+
+        for pid, info in players.items():
+            name = str(info.get("name", ""))
+            wins = int(info.get("wins", 0))
+            losses = int(info.get("losses", 0))
+            rows.append((pid, name, wins, losses))
+
+        # Sort by: wins DESC, losses ASC, name ASC (case-insensitive)
+        rows.sort(key=lambda r: (-r[2], r[3], r[1].lower()))
+        return rows
+
+    # ---------- helpers ----------
+    def _write_json(self, content: Dict[str, Any]) -> None:
+        with self.path.open("w", encoding="utf-8") as f:
+            json.dump(content, f, ensure_ascii=False, indent=2)

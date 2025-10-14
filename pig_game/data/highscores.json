@@ -1,0 +1,43 @@
+{
+  "players": {
+    "p1": {
+      "name": "Alice",
+      "wins": 3,
+      "losses": 0
+    },
+    "p2": {
+      "name": "Bobby",
+      "wins": 0,
+      "losses": 3,
+      "score": 0
+    },
+    "p3": {
+      "name": "Charlie",
+      "wins": 1,
+      "losses": 1,
+      "score": 0
+    }
+  },
+  "games": [
+    {
+      "winner": "p1",
+      "loser": "p2",
+      "timestamp": "2025-10-13T00:37:02Z"
+    },
+    {
+      "winner": "p1",
+      "loser": "p2",
+      "timestamp": "2025-10-13T00:45:09Z"
+    },
+    {
+      "winner": "p3",
+      "loser": "p2",
+      "timestamp": "2025-10-13T00:45:09Z"
+    },
+    {
+      "winner": "p1",
+      "loser": "p3",
+      "timestamp": "2025-10-13T00:45:09Z"
+    }
+  ]
+}
