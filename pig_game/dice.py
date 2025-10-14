@@ -1,16 +1,33 @@
-"""Dice module (skeleton).
-TODO (M1):
-- Implement Dice.roll() -> int in [1, 6]
-- Add docstrings and unit tests
-- Keep class independent from Game
-"""
+import random
+from typing import Final
 
-from __future__ import annotations
 
 
 class Dice:
-    """A standard six-sided dice (skeleton)."""
+    """
+    A class representing a standard six-sided dice.
 
-    def roll(self) -> int:  # pragma: no cover - to be implemented by M1
-        """Return a random integer in [1, 6]."""
-        raise NotImplementedError("Implement Dice.roll for M1")
+    Attributes
+    ----------
+    SIDES : Final[int]
+        The number of sides on the dice (constant).
+
+    Methods
+    -------
+    roll() -> int
+        Simulates rolling the dice and returns a random integer between 1
+and SIDES.
+    """
+
+    SIDES: Final[int] = 6  # constant number of sides on a standard dice
+
+    def roll(self) -> int:
+        """
+        Roll the dice.
+
+        Returns
+        -------
+        int
+            A random integer between 1 and SIDES inclusive.
+        """
+        return random.randint(1, self.SIDES)
