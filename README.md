@@ -119,5 +119,67 @@ Expected:
 
 ---
 
+## 🕹️ Command Line Interface (AI + HighScore Integration)
+
+The **Pig Game** also supports playing against an **AI opponent** and viewing saved **HighScores**.
+
+### ▶️ Start a Game vs CPU
+
+```bash
+python -m pig_game.shell ai --player "Mohammed" --level normal
+```
+
+**Options:**
+
+| Option | Description | Default |
+|:--------|:-------------|:----------|
+| `--player`, `-p` | Your displayed name | `"Player"` |
+| `--level`, `-l` | CPU difficulty (`easy`, `normal`, `smart`) | `normal` |
+
+**Example Gameplay:**
+
+```
+Your turn, Mohammed — You: 0 | CPU: 0 | Turn: 0
+[r=roll, h=hold, q=quit] > r
+🎲 You rolled 4. Turn points: 4
+[r=roll, h=hold, q=quit] > h
+You held. Your total is now 4.
+
+CPU turn — CPU: 0 | You: 4 | Turn: 0
+🤖 CPU rolled 6. CPU turn points: 6
+🤖 CPU holds. CPU total: 6
+```
+
+At the end of the game, the system automatically records the result in the **HighScore** table (unless the player quits using `q`).
+
+---
+
+### 🏆 View HighScores
+
+To view recorded results:
+
+```bash
+python -m pig_game.shell high --limit 10
+```
+
+Example output:
+
+```
+Player         Vs     Result  For Against Duration(s)  When(UTC)
+--------------------------------------------------------------------------------
+Mohammed       CPU    win     150      64         250  2025-10-15T22:32:22Z
+```
+
+**Tip:** Use `--limit` to change how many rows are displayed.
+
+---
+
+### 💡 Notes
+- The game’s CPU uses `Intelligence.should_hold()` to decide whether to continue rolling or hold.
+- High scores are stored locally at `~/.pig_highscores.json`.
+- Invalid commands are handled safely (e.g., if the user types anything other than `r`, `h`, or `q`).
+
+---
+
 ## 👨‍💻 Contributors
-- **Mohammed Nour** — CLI implementation, error handling, and README documentation.
+- **Mohammed Nour** — CLI implementation, AI & HighScore integration, error handling, and documentation.
