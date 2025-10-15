@@ -1,20 +1,30 @@
-"""AI Intelligence (skeleton).
-TODO (M2):
-- Implement Intelligence with levels easy/medium/hard
-- Method: should_hold(turn_points, total_score, opponent_score, goal) -> bool
-- ≥90% coverage, docstrings, type hints
-"""
+# pig_game/intelligence.py
+from dataclasses import dataclass
 
-from __future__ import annotations
+@dataclass
+class Intelligence:
+    """
+    Simple, pluggable AI policy for the computer player.
+    Levels: easy, normal, smart.
+    """
+    level: str = "normal"
 
+    def should_hold(self, turn_score: int, total_score: int, opponent_score: int) -> bool:
+        """
+        Decide whether the computer should HOLD or ROLL.
+        - HOLD if holding now would win.
+        - Otherwise use a target threshold per level.
+        - If trailing significantly, be slightly more aggressive.
+        """
+        WIN_SCORE = 100
+        if total_score + turn_score >= WIN_SCORE:
+            return True
 
-class Intelligence:  # pragma: no cover
-    """Simple AI policy (skeleton)."""
+        targets = {"easy": 15, "normal": 20, "smart": 25}
+        target = targets.get(self.level, 20)
 
-    def __init__(self, level: str = "medium") -> None:
-        raise NotImplementedError("Implement Intelligence for M2")
+        # If trailing by a noticeable margin, raise risk tolerance.
+        if total_score + 15 < opponent_score:
+            target += 3
 
-    def should_hold(
-        self, turn_points: int, total_score: int, opponent_score: int, goal: int
-    ) -> bool:
-        raise NotImplementedError("Implement Intelligence.should_hold for M2")
+        return turn_score >= target
