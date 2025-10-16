@@ -1,30 +1,50 @@
 # pig_game/intelligence.py
-from dataclasses import dataclass
+from typing import Final
 
-@dataclass
 class Intelligence:
     """
-    Simple, pluggable AI policy for the computer player.
-    Levels: easy, normal, smart.
+    Simple AI policy for the computer player.
+    
+    Levels:
+        - easy: hold when turn_points >= 15
+        - medium: hold when turn_points >= 20
+        - hard: hold when total + turn >= goal - 10
     """
-    level: str = "normal"
 
-    def should_hold(self, turn_score: int, total_score: int, opponent_score: int) -> bool:
+    EASY_THRESHOLD: Final[int] = 15
+    MEDIUM_THRESHOLD: Final[int] = 20
+
+    def __init__(self, level: str = "medium") -> None:
+        if level not in ("easy", "medium", "hard"):
+            raise ValueError(f"Invalid level '{level}'. Choose from 
+'easy', 'medium', 'hard'.")
+        self.level = level
+
+    def should_hold(self, turn_points: int, total_score: int, 
+opponent_score: int, goal: int) -> bool:
         """
         Decide whether the computer should HOLD or ROLL.
-        - HOLD if holding now would win.
-        - Otherwise use a target threshold per level.
-        - If trailing significantly, be slightly more aggressive.
+
+        Parameters
+        ----------
+        turn_points : int
+            Current turn points accumulated.
+        total_score : int
+            AI's total score before this turn.
+        opponent_score : int
+            The opponent's current score (not used by current heuristics).
+        goal : int
+            The target score to win the game.
+        
+        Returns
+        -------
+        bool
+            True if AI decides to hold, False otherwise.
         """
-        WIN_SCORE = 100
-        if total_score + turn_score >= WIN_SCORE:
-            return True
+        if self.level == "easy":
+            return turn_points >= self.EASY_THRESHOLD
+        if self.level == "medium":
+            return turn_points >= self.MEDIUM_THRESHOLD
+        # hard
+        return (total_score + turn_points) >= (goal - 10)
 
-        targets = {"easy": 15, "normal": 20, "smart": 25}
-        target = targets.get(self.level, 20)
-
-        # If trailing by a noticeable margin, raise risk tolerance.
-        if total_score + 15 < opponent_score:
-            target += 3
-
-        return turn_score >= target
