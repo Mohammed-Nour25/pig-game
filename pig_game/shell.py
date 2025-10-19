@@ -1,243 +1,213 @@
-"""Simple text-based CLI for the Pig game using Python's cmd module."""
+# pig_game/shell.py
+from __future__ import annotations
+import argparse
+import sys
+import time
 
-import cmd
-from typing import Optional
-
-try:
-    from pig_game.game import Game  # type: ignore
-except Exception:
-    Game = None  # type: ignore
-
-
-RULES = (
-    "🐷 Pig — Rules:\n"
-    "- Players take turns rolling one die.\n"
-    "- Add roll to turn points. If you roll 1, you bust (turn points = 0) and switch turn.\n"
-    "- 'hold' banks turn points into total score and passes the turn.\n"
-    "- First to reach the goal (default 100) wins.\n"
-    "- 'cheat' adds +90 for quick testing.\n"
-)
+from pig_game.game import Game
+from pig_game.intelligence import Intelligence
+from pig_game.highscore import HighScoreStore, make_entry
 
 
-def _safe_get(obj, *names, default=None):
-    """Try multiple attribute names and return the first valid value."""
-    for name in names:
-        if hasattr(obj, name):
-            val = getattr(obj, name)
-            try:
-                return val() if callable(val) else val
-            except Exception:
-                continue
-    return default
-
-
-def _as_int(x, default=0):
-    """Cast safely to int, return default on failure."""
+def _game_over(g: Game) -> bool:
+    """Return True if either player has won (by API or by reaching goal)."""
     try:
-        return int(x)
+        if g.is_winner(0) or g.is_winner(1):
+            return True
     except Exception:
-        return default
-
-
-def _line(char="─", n=40) -> str:
-    """Return a line separator of given length."""
-    return char * n
-
-
-class PigShell(cmd.Cmd):
-    """Command-line shell for the Pig game."""
-
-    intro = "🐷 Welcome to Pig! Type 'help' or '?' for available commands.\n"
-    prompt = "(pig) "
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.game: Optional[Game] = None  # type: ignore[assignment]
-
-    # ---------------- Helpers ----------------
-    def _need_game(self) -> bool:
-        """Check if a game exists before running a command."""
-        if self.game is None:
-            print("⚠️  No game started. Use: start [goal]")
-            return False
-        return True
-
-    def _render_status(self) -> None:
-        """Display a clean, readable status panel."""
-        g = self.game
-        if g is None:
-            print("⚠️  No game started. Use: start [goal]")
-            return
-
-        players = _safe_get(g, "players") or []
-        active = _as_int(_safe_get(g, "active_player", "active_index", default=0))
-        turn_points = _as_int(_safe_get(g, "turn_points", default=0))
-        goal = _as_int(_safe_get(g, "goal_score", "goal", default=100))
-        winner = _safe_get(g, "winner", "get_winner")
-
-        print(_line("═", 40))
-        print(f"🎯 Goal: {goal} | 🎲 Turn points: {turn_points}")
- print("⚠️  No game started. Use: start [goal]")
- print("⚠️  No game started. Use: start [goal]")
-        print(_line("─", 40))
-        for i, p in enumerate(players):
-            name = _safe_get(p, "name", default=f"Player{i+1}")
-            total = _as_int(_safe_get(p, "score", "total_score", default=0))
-            mark = "👉" if (i == active or bool(_safe_get(p, "is_active", default=False))) else "  "
-            print(f"{mark} {name:<12} | total = {total}")
-        print(_line("═", 40))
-
-        if winner:
-            if isinstance(winner, int) and 0 <= winner < len(players):
-                win_name = _safe_get(players[winner], "name", default=f"Player{winner+1}")
-            elif hasattr(winner, "name"):
-                win_name = _safe_get(winner, "name", default=str(winner))
-            else:
-                win_name = str(winner)
-            print(f"🏆 Winner: {win_name}! Type 'start' to play again.\n")
-
-    # ---------------- Commands ----------------
-    def do_start(self, arg: str) -> None:
-        """start [goal] -> start a new game (default 100)."""
-        if Game is None:
-            print("❌ Game class not available yet.")
-            return
-
-        goal = 100
-        s = arg.strip()
-        if s:
-            try:
-                goal = int(s)
-                if goal < 1:
-                    raise ValueError
-            except ValueError:
-                print("⚠️  Goal must be a positive integer. Using 100.")
-                goal = 100
-
-        try:
-            self.game = Game(goal_score=goal)  # type: ignore[call-arg]
-        except TypeError:
-            try:
-                self.game = Game()  # type: ignore[call-arg]
-                if hasattr(self.game, "goal_score"):
-                    setattr(self.game, "goal_score", goal)
-            except Exception as exc:
-                print(f"❌ Could not start game: {exc}")
-                self.game = None
-                return
-        except Exception as exc:
-            print(f"❌ Could not start game: {exc}")
-            self.game = None
-            return
-
-        print(f"✅ New game started. Goal = {goal}.\n")
-        self._render_status()
-
-    def do_status(self, _: str) -> None:
-        """status -> show scores and current turn."""
-        if self._need_game():
-            self._render_status()
-
-    def do_rules(self, _: str) -> None:
-        """rules -> show Pig rules."""
-        print(RULES)
-
-    def do_quit(self, _: str) -> bool:
-        """quit -> exit the game."""
-        print("👋 Bye!")
-        return True
-
-    do_EOF = do_quit  # Ctrl-D / Ctrl-Z quits
-
-    # ---- Gameplay Commands ----
-    def do_roll(self, _: str) -> None:
-        """roll -> roll the dice for the current player."""
-        if not self._need_game():
-            return
-        try:
-            value = self.game.roll()  # type: ignore[attr-defined]
-            if value == 1:
-                print("🎲 Rolled: 1 → 💥 Bust! Switching turn…")
-            else:
-                print(f"🎲 Rolled: {value}")
-        except Exception as exc:
-            print(f"❌ roll failed: {exc}")
-            return
-
-        self._render_status()
-
-    def do_hold(self, _: str) -> None:
-        """hold -> bank turn points and switch player."""
-        if not self._need_game():
-            return
-        try:
-            result = self.game.hold()  # type: ignore[attr-defined]
-            if result == "win":
-                print("🏆 Winner detected! 🎉")
-            else:
-                print("💾 Points banked. Switching turn…")
-        except Exception as exc:
-            print(f"❌ hold failed: {exc}")
-
-        self._render_status()
-
-    def do_cheat(self, _: str) -> None:
-        """cheat -> add +90 to active player (for testing)."""
-        if not self._need_game():
-            return
-
-        g = self.game
-        try:
-            if hasattr(g, "cheat"):
-                g.cheat(90)  # type: ignore[attr-defined]
-            else:
-                players = _safe_get(g, "players") or []
-                active = _as_int(_safe_get(g, "active_player", "active_index", default=0))
-                if 0 <= int(active) < len(players):
-                    p = players[int(active)]
-                    if hasattr(p, "score"):
-                        p.score += 90
-                    elif hasattr(p, "total_score"):
-                        p.total_score += 90
-            print("✨ +90 applied.")
-        except Exception as exc:
-            print(f"❌ cheat failed: {exc}")
-
-        self._render_status()
-
-    def do_name(self, arg: str) -> None:
-        """name <new_name> -> change active player's name."""
-        if not self._need_game():
-            return
-
-        new = arg.strip()
-        if not new:
-            print("⚠️  Usage: name <new_name>")
-            return
-
-        try:
-            players = _safe_get(self.game, "players") or []
-            active = _as_int(_safe_get(self.game, "active_player", "active_index", default=0))
-            if 0 <= int(active) < len(players):
-                setattr(players[int(active)], "name", new)
-                print(f"✅ Name set to '{new}'")
-            else:
-                print("⚠️  No active player index available.")
-        except Exception as exc:
-            print(f"❌ name failed: {exc}")
-
-        self._render_status()
-
-    # --------------- Misc ---------------
-    def default(self, line: str) -> None:
-        """Handle unknown commands gracefully."""
-        print(f"⚠️  Unknown command: {line!r}. Try 'help'.")
-
-    def emptyline(self) -> None:
-        """Ignore empty lines (avoid repeating last command)."""
         pass
+    try:
+        return any(s >= g.goal for s in g.scores)
+    except Exception:
+        return False
 
 
-def main() -> None:
-    """Entry point to start the PigShell CLI loop."""
-    PigShell().cmdloop()
+def _winner_index(g: Game) -> int | None:
+    """Return 0 if Player 1 wins, 1 if Player 2 wins, else None."""
+    try:
+        if g.is_winner(0):
+            return 0
+        if g.is_winner(1):
+            return 1
+    except Exception:
+        pass
+    try:
+        if g.scores[0] >= g.goal or g.scores[1] >= g.goal:
+            return 0 if g.scores[0] >= g.scores[1] else 1
+    except Exception:
+        pass
+    return None
+
+
+def play_vs_cpu(player_name: str, level: str, store: HighScoreStore) -> int:
+    """
+    Human (Player 1) vs CPU (Player 2) using your Game API:
+      - g.active_index (0 or 1), g.active / g.waiting labels
+      - g.scores: [p1_total, p2_total]
+      - g.turn_total: current turn points
+      - g.roll() -> int, g.hold() -> None
+      - g.is_winner(player_index: Optional[int]) -> bool
+    Records a HighScore after the game ends (unless user quits).
+    """
+    g = Game()
+    ai = Intelligence(level=level)
+    started = time.time()
+    user_quit = False
+    record_result = True  # If the user quits, we'll set this to False.
+
+    try:
+        while not _game_over(g):
+            human_total, cpu_total = g.scores[0], g.scores[1]
+            turn_points = g.turn_total
+            current_idx = g.active_index  # 0 = human, 1 = cpu
+
+            if current_idx == 0:
+                # Human turn
+                print(f"\nYour turn, {player_name} — You: {human_total} | CPU: {cpu_total} | Turn: {turn_points}")
+                cmd = input("[r=roll, h=hold, q=quit] > ").strip().lower()
+                if cmd == "q":
+                    print("Exiting game…")
+                    user_quit = True
+                    record_result = False  # do not compute win/lose or record highscores
+                    break
+                elif cmd == "r":
+                    die = g.roll()
+                    if die == 1:
+                        # Bust: Game switches turn internally; turn_total reset to 0
+                        print("🎲 You rolled 1 — turn lost.")
+                    else:
+                        print(f"🎲 You rolled {die}. Turn points: {g.turn_total}")
+                elif cmd == "h":
+                    g.hold()
+                    print(f"You held. Your total is now {g.scores[0]}.")
+                else:
+                    print("Invalid command. Use r/h/q.")
+                    continue
+            else:
+                # CPU turn
+                print(f"\nCPU turn — CPU: {cpu_total} | You: {human_total} | Turn: {turn_points}")
+                # Decision via Intelligence.should_hold()
+                if ai.should_hold(g.turn_total, cpu_total, human_total):
+                    g.hold()
+                    print(f"🤖 CPU holds. CPU total: {g.scores[1]}")
+                else:
+                    die = g.roll()
+                    if die == 1:
+                        print("🤖 CPU rolled 1 — CPU loses its turn points.")
+                    else:
+                        print(f"🤖 CPU rolled {die}. CPU turn points: {g.turn_total}")
+
+        # Game ended — compute result or handle quit
+        duration = int(time.time() - started)
+        human, cpu = g.scores[0], g.scores[1]
+
+        # If user quit, do not print win/lose nor record highscores.
+        if user_quit and not record_result:
+            print("\n" + "—" * 40)
+            print(f"Game aborted. Final snapshot ⇒ {player_name}: {human} | CPU: {cpu}")
+            print("Result not recorded.")
+            return 0
+
+        # Otherwise, compute and print result, then record.
+        winner_idx = _winner_index(g)
+        if winner_idx is None:
+            # Fallback by totals
+            winner_idx = 0 if human >= cpu else 1
+
+        result = "win" if winner_idx == 0 else "lose"
+        score_for, score_against = (human, cpu) if result == "win" else (cpu, human)
+
+        print("\n" + "—" * 40)
+        print(f"Final Score ⇒ {player_name}: {human} | CPU: {cpu}")
+        print("🎉 You win!" if result == "win" else "💀 You lose!")
+
+        # Record HighScore safely
+        try:
+            store.add(make_entry(
+                player=player_name,
+                opponent="CPU",
+                result=result,
+                score_for=score_for,
+                score_against=score_against,
+                duration_sec=duration,
+            ))
+        except Exception as ex:
+            print(f"Warning: failed to record HighScore ({ex})")
+
+        return 0
+    except KeyboardInterrupt:
+        print("\nInterrupted by user.")
+        return 130
+    except Exception as ex:
+        print(f"Unexpected error during game: {ex}")
+        return 1
+
+
+def show_highscores(limit: int, store: HighScoreStore) -> int:
+    """Print a small HighScore table. Be polite if empty."""
+    try:
+        rows = store.top(limit)
+        if not rows:
+            print("No highscores yet. Play a game first, then try `pig high`.")
+            return 0
+        print(f"{'Player':<14} {'Vs':<6} {'Result':<6} {'For':>4} {'Against':>7} {'Duration(s)':>11}  {'When(UTC)'}")
+        print("-" * 80)
+        for r in rows:
+            print(f"{r.player:<14} {'CPU':<6} {r.result:<6} {r.score_for:>4} {r.score_against:>7} {r.duration_sec:>11}  {r.when_utc}")
+        return 0
+    except Exception as ex:
+        print(f"Failed to show highscores: {ex}")
+        return 1
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """
+    Subcommands:
+      - ai   : play vs CPU
+      - high : show highscores
+    """
+    parser = argparse.ArgumentParser(
+        prog="pig",
+        description="Pig Game CLI — play vs CPU and view highscores.",
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    p_ai = sub.add_parser("ai", help="Play vs the computer (CPU).")
+    p_ai.add_argument("--player", "-p", default="Player", help="Your displayed player name.")
+    p_ai.add_argument("--level", "-l", default="normal", choices=["easy", "normal", "smart"], help="CPU intelligence level.")
+    p_ai.set_defaults(cmd="ai")
+
+    p_high = sub.add_parser("high", help="Show HighScore table.")
+    p_high.add_argument("--limit", "-n", type=int, default=10, help="Max rows to show.")
+    p_high.set_defaults(cmd="high")
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    store = HighScoreStore()
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if not getattr(args, "cmd", None):
+        parser.print_help(sys.stderr)
+        print("\nExamples:\n  pig ai --player Mohammed --level normal\n  pig high --limit 10\n")
+        return 2
+
+    try:
+        if args.cmd == "ai":
+            return play_vs_cpu(args.player, args.level, store)
+        elif args.cmd == "high":
+            return show_highscores(args.limit, store)
+        else:
+            parser.print_help(sys.stderr)
+            return 2
+    except SystemExit as se:
+        return int(se.code) if isinstance(se.code, int) else 1
+    except Exception as ex:
+        print(f"Unexpected CLI error: {ex}")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
