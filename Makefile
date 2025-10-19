@@ -25,7 +25,6 @@ doc:
 	$(PYTHON) -m pdoc pig_game -o doc/api
 
 uml:
-	$(PYTHON) -m pylint.pyreverse -o png -p pig_game pig_game || true
-	mkdir -p doc/uml
-	if [ -f "classes_pig_game.png" ]; then mv -f classes_pig_game.png doc/uml/; fi
-	if [ -f "packages_pig_game.png" ]; then mv -f packages_pig_game.png doc/uml/; fi
+	pyreverse -AS -f ALL -o png -p pig_game pig_game
+	if exist classes_pig_game.png move /Y classes_pig_game.png doc\uml\classes_pig_game.png
+	if exist packages_pig_game.png move /Y packages_pig_game.png doc\uml\packages_pig_game.png
