@@ -1,31 +1,28 @@
-PYTHON ?= python
+.PHONY: lint format test coverage clean
 
-.PHONY: install test coverage lint fmt doc uml
+# --- Lint: flake8 + pylint (errors only) ---
+lint:
+	@echo ">>> flake8"
+	flake8 .
+	@echo ">>> pylint (errors only)"
+	pylint -E pig_game
 
-install:
-	$(PYTHON) -m pip install -r requirements.txt
+# --- Black (check only) ---
+format:
+	@echo ">>> black --check"
+	black --check .
 
+# --- Run tests ---
 test:
-	coverage run -m pytest -q || true
-	coverage report -m
+	pytest -q
 
+# --- Coverage (HTML + console) ---
 coverage:
-	coverage run -m pytest || true
+	coverage run -m pytest
 	coverage report -m
 	coverage html
+	@echo "HTML report: htmlcov/index.html"
 
-lint:
-	flake8 .
-	pylint -E pig_game || true
-
-fmt:
-	black .
-
-doc:
-	$(PYTHON) -m pdoc pig_game -o doc/api
-
-uml:
-	$(PYTHON) -m pylint.pyreverse -o png -p pig_game pig_game || true
-	mkdir -p doc/uml
-	if [ -f "classes_pig_game.png" ]; then mv -f classes_pig_game.png doc/uml/; fi
-	if [ -f "packages_pig_game.png" ]; then mv -f packages_pig_game.png doc/uml/; fi
+clean:
+	@echo ">>> cleaning build/test artifacts"
+	@rm -rf .pytest_cache htmlcov build dist *.egg-info
