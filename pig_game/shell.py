@@ -1,270 +1,69 @@
-"""Simple text-based CLI for the Pig game using Python's cmd module."""
+# pig_game/shell.py
+from __future__ import annotations
 
-import cmd
-from typing import Optional
+import argparse
+import sys
+import time
+from typing import Any, List, Optional, Tuple
 
+from pig_game.game import Game
+from pig_game.intelligence import Intelligence
+
+# HighScore integration is optional. We try to import it; if not available,
+# the CLI still works and simply skips recording or showing highscores.
 try:
-    from pig_game.game import Game  # type: ignore
-except Exception:
-    Game = None  # type: ignore
+    from pig_game.highscore import HighScoreStore, make_entry  # type: ignore
+except Exception:  # pragma: no cover - safety net
+    HighScoreStore = None  # type: ignore[misc,assignment]
+    make_entry = None  # type: ignore[misc,assignment]
 
 
-RULES = (
-    "🐷 Pig — Rules:\n"
-    "- Players take turns rolling one die.\n"
-    "- Add roll to turn points. If you roll 1, you bust (turn points = 0) and switch turn.\n"
-    "- 'hold' banks turn points into total score and passes the turn.\n"
-    "- First to reach the goal (default 100) wins.\n"
-    "- 'cheat' adds +90 for quick testing.\n"
-)
+# ---------- helpers for game state ----------
 
 
-def _safe_get(obj, *names, default=None):
-    """Try multiple attribute names and return the first valid value."""
-    for name in names:
-        if hasattr(obj, name):
-            val = getattr(obj, name)
-            try:
-                return val() if callable(val) else val
-            except Exception:
-                continue
-    return default
-
-
-def _as_int(x, default=0):
-    """Cast safely to int, return default on failure."""
+def _game_over(g: Game) -> bool:
+    """Return True if either player has won (by API or by reaching goal)."""
+    # Preferred: use provided winner-API if exists.
     try:
-        return int(x)
+        if g.is_winner(0) or g.is_winner(1):
+            return True
     except Exception:
-        return default
-
-
-def _line(char="─", n=40) -> str:
-    """Return a line separator of given length."""
-    return char * n
-
-
-class PigShell(cmd.Cmd):
-    """Command-line shell for the Pig game."""
-
-    intro = "🐷 Welcome to Pig! Type 'help' or '?' for available commands.\n"
-    prompt = "(pig) "
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.game: Optional[Game] = None  # type: ignore[assignment]
-
-    # ---------------- Helpers ----------------
-    def _need_game(self) -> bool:
-        """Check if a game exists before running a command."""
-        if self.game is None:
-            print("⚠️  No game started. Use: start [goal]")
-            return False
-        return True
-
-    def _render_status(self) -> None:
-        """Display a clean, readable status panel."""
-        g = self.game
-        print(_line("═", 40))
-
-        # If no game yet, show a hint and return
-        if g is None:
-            print("⚠️  No game started. Use: start [goal]")
-            print(_line("─", 40))
-            return
-
-        # Read basic game fields (falling back safely)
-        players = _safe_get(g, "players") or []
-        active = _as_int(_safe_get(g, "active_player", "active_index", default=0))
-        turn_points = _as_int(_safe_get(g, "turn_points", "turn_total", default=0))
-        goal = _as_int(_safe_get(g, "goal_score", "goal", default=100))
-        winner = _safe_get(g, "winner", "get_winner")
-
-        # Header line
-        print(f"Goal: {goal} | Turn points: {turn_points}")
-        print(_line("─", 40))
-
-        # Render players
-        for i, p in enumerate(players):
-            name = _safe_get(p, "name", default=str(p))
-            if not name:
-                name = f"Player{i+1}"
-
-            total = _as_int(_safe_get(p, "score", "total_score", default=0))
-            # If scores are kept in Game.scores, use them
-            if total == 0 and hasattr(g, "scores"):
-                try:
-                    total = int(g.scores[i])  # type: ignore[attr-defined]
-                except Exception:
-                    pass
-
-            marker = (
-                "→"
-                if (i == active or bool(_safe_get(p, "is_active", default=False)))
-                else " "
-            )
-            print(f"{marker} {name:<12} | total = {total}")
-
-        print(_line("═", 40))
-
-        # Optional winner line
-        if winner:
-            if isinstance(winner, int) and 0 <= winner < len(players):
-                win_name = _safe_get(
-                    players[winner], "name", default=f"Player{winner+1}"
-                )
-            elif hasattr(winner, "name"):
-                win_name = _safe_get(winner, "name", default=str(winner))
-            else:
-                win_name = str(winner)
-            print(f"🏆 Winner: {win_name}! Type 'start' to play again.\n")
-
-    # ---------------- Commands ----------------
-    def do_start(self, arg: str) -> None:
-        """start [goal] -> start a new game (default 100)."""
-        if Game is None:
-            print("❌ Game class not available yet.")
-            return
-
-        goal = 100
-        s = arg.strip()
-        if s:
-            try:
-                goal = int(s)
-                if goal < 1:
-                    raise ValueError
-            except ValueError:
-                print("⚠️  Goal must be a positive integer. Using 100.")
-                goal = 100
-
-        try:
-            self.game = Game(goal_score=goal)  # type: ignore[call-arg]
-        except TypeError:
-            try:
-                self.game = Game()  # type: ignore[call-arg]
-                if hasattr(self.game, "goal_score"):
-                    setattr(self.game, "goal_score", goal)
-            except Exception as exc:
-                print(f"❌ Could not start game: {exc}")
-                self.game = None
-                return
-        except Exception as exc:
-            print(f"❌ Could not start game: {exc}")
-            self.game = None
-            return
-
-        print(f"✅ New game started. Goal = {goal}.\n")
-        self._render_status()
-
-    def do_status(self, _: str) -> None:
-        """status -> show scores and current turn."""
-        if self._need_game():
-            self._render_status()
-
-    def do_rules(self, _: str) -> None:
-        """rules -> show Pig rules."""
-        print(RULES)
-
-    def do_quit(self, _: str) -> bool:
-        """quit -> exit the game."""
-        print("👋 Bye!")
-        return True
-
-    do_EOF = do_quit  # Ctrl-D / Ctrl-Z quits
-
-    # ---- Gameplay Commands ----
-    def do_roll(self, _: str) -> None:
-        """roll -> roll the dice for the current player."""
-        if not self._need_game():
-            return
-        try:
-            value = self.game.roll()  # type: ignore[attr-defined]
-            if value == 1:
-                print("🎲 Rolled: 1 → 💥 Bust! Switching turn…")
-            else:
-                print(f"🎲 Rolled: {value}")
-        except Exception as exc:
-            print(f"❌ roll failed: {exc}")
-            return
-
-        self._render_status()
-
-    def do_hold(self, _: str) -> None:
-        """hold -> bank turn points and switch player."""
-        if not self._need_game():
-            return
-        try:
-            result = self.game.hold()  # type: ignore[attr-defined]
-            if result == "win":
-                print("🏆 Winner detected! 🎉")
-            else:
-                print("💾 Points banked. Switching turn…")
-        except Exception as exc:
-            print(f"❌ hold failed: {exc}")
-
-        self._render_status()
-
-    def do_cheat(self, _: str) -> None:
-        """cheat -> add +90 to active player (for testing)."""
-        if not self._need_game():
-            return
-
-        g = self.game
-        try:
-            if hasattr(g, "cheat"):
-                g.cheat(90)  # type: ignore[attr-defined]
-            else:
-                players = _safe_get(g, "players") or []
-                active = _as_int(
-                    _safe_get(g, "active_player", "active_index", default=0)
-                )
-                if 0 <= int(active) < len(players):
-                    p = players[int(active)]
-                    if hasattr(p, "score"):
-                        p.score += 90
-                    elif hasattr(p, "total_score"):
-                        p.total_score += 90
-            print("✨ +90 applied.")
-        except Exception as exc:
-            print(f"❌ cheat failed: {exc}")
-
-        self._render_status()
-
-    def do_name(self, arg: str) -> None:
-        """name <new_name> -> change active player's name."""
-        if not self._need_game():
-            return
-
-        new = arg.strip()
-        if not new:
-            print("⚠️  Usage: name <new_name>")
-            return
-
-        try:
-            players = _safe_get(self.game, "players") or []
-            active = _as_int(
-                _safe_get(self.game, "active_player", "active_index", default=0)
-            )
-            if 0 <= int(active) < len(players):
-                setattr(players[int(active)], "name", new)
-                print(f"✅ Name set to '{new}'")
-            else:
-                print("⚠️  No active player index available.")
-        except Exception as exc:
-            print(f"❌ name failed: {exc}")
-
-        self._render_status()
-
-    # --------------- Misc ---------------
-    def default(self, line: str) -> None:
-        """Handle unknown commands gracefully."""
-        print(f"⚠️  Unknown command: {line!r}. Try 'help'.")
-
-    def emptyline(self) -> None:
-        """Ignore empty lines (avoid repeating last command)."""
         pass
 
+    # Fallback: rely on totals vs goal.
+    try:
+        return any(s >= g.goal for s in g.scores)  # type: ignore[attr-defined]
+    except Exception:
+        return False
 
-def main() -> None:
-    """Entry point to start the PigShell CLI loop."""
-    PigShell().cmdloop()
+
+def _winner_index(g: Game) -> Optional[int]:
+    """Return 0 if Player 1 wins, 1 if Player 2 wins, else None."""
+    try:
+        if g.is_winner(0):
+            return 0
+        if g.is_winner(1):
+            return 1
+    except Exception:
+        pass
+
+    # Fallback by total scores if API not present.
+    try:
+        if g.scores[0] >= g.goal or g.scores[1] >= g.goal:  # type: ignore[attr-defined]
+            return 0 if g.scores[0] >= g.scores[1] else 1  # type: ignore[attr-defined]
+    except Exception:
+        pass
+    return None
+
+
+# ---------- optional HighScore wrapper ----------
+
+
+class _NoHighScoreStore:
+    """Tiny no-op store used when HighScore module is not available."""
+
+    def add(self, *_: Any, **__: Any) -> None:  # pylint: disable=unused-argument
+        print("Note: HighScore module not available, result was not recorded.")
+
+    def top(self, _n: int = 10) -> list:
+        print("Note: HighScore
