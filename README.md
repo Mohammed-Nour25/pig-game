@@ -1,12 +1,14 @@
-# 🐷 Pig Game — Command-Line Interface (CLI)
+# Pig Game — Command-Line Interface (CLI)
 
 The project includes a simple text-based command-line interface (CLI) for playing the **Pig game** interactively.
 
-## ▶️ Run the CLI
+## Run the CLI
 You can start the CLI directly using Python:
 
 ```bash
 python -m pig_game
+
+
 ```
 
 This will open an interactive shell like:
@@ -17,7 +19,7 @@ Welcome to Pig! Type 'help' or '?' for commands.
 (pig)
 ```
 
-## 🧩 Available Commands
+##  Available Commands
 | Command | Description |
 |----------|--------------|
 | `start [goal]` | Start a new game (default goal = 100 points). |
@@ -29,7 +31,7 @@ Welcome to Pig! Type 'help' or '?' for commands.
 | `cheat` | Add +90 points to active player (for testing). |
 | `quit` / `Ctrl+D` | Exit the game. |
 
-## 💡 Example Session
+##  Example Session
 ```
 Welcome to Pig! Type 'help' or '?' for commands.
 
@@ -53,3 +55,19 @@ roll is not implemented in Game yet.
 (pig) quit
 Bye!
 ```
+
+## UML Diagrams
+
+We generate class and package diagrams using `pyreverse` (from `pylint`) and Graphviz.
+
+### Prerequisites
+Make sure you have:
+- Graphviz installed (`dot -V` should work)
+- `pylint` and `graphviz` installed in your Python environment:
+  ```bash
+  pip install pylint graphviz
+
+### Generate the diagrams
+To generate UML diagrams automatically, run:
+```bash
+make uml
