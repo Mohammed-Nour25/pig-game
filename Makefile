@@ -1,4 +1,10 @@
-.PHONY: lint format test coverage clean
+PYTHON ?= python3
+
+.PHONY: install lint format test coverage clean doc
+
+# --- Install dependencies ---
+install:
+	$(PYTHON) -m pip install -r requirements.txt
 
 # --- Lint: flake8 + pylint (errors only) ---
 lint:
@@ -23,6 +29,12 @@ coverage:
 	coverage html
 	@echo "HTML report: htmlcov/index.html"
 
+# --- Generate documentation ---
+doc:
+	$(PYTHON) -m pdoc pig_game -o doc/api
+
+# --- Clean build/test artifacts ---
 clean:
 	@echo ">>> cleaning build/test artifacts"
 	@rm -rf .pytest_cache htmlcov build dist *.egg-info
+
