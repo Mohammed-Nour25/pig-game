@@ -1,32 +1,48 @@
 # pig_game/intelligence.py
-from dataclasses import dataclass
+from __future__ import annotations
+
+from typing import Final
 
 
-@dataclass
 class Intelligence:
     """
-    Simple, pluggable AI policy for the computer player.
-    Levels: easy, normal, smart.
+    Tiny policy for CPU decisions in Pig.
+
+    Levels:
+        - easy   : hold when turn_points >= 15
+        - normal : hold when turn_points >= 20 (alias: medium)
+        - hard   : hold when total_score + turn_points >= goal - 10 (alias: smart)
     """
 
-    level: str = "normal"
+    EASY_THRESHOLD: Final[int] = 15
+    NORMAL_THRESHOLD: Final[int] = 20
 
-    def should_hold(self, turn_score: int, total_score: int, opponent_score: int) -> bool:
-        """
-        Decide whether the computer should HOLD or ROLL.
-        - HOLD if holding now would win.
-        - Otherwise use a target threshold per level.
-        - If trailing significantly, be slightly more aggressive.
-        """
-        WIN_SCORE = 100
-        if total_score + turn_score >= WIN_SCORE:
-            return True
+    def __init__(self, level: str = "normal") -> None:
+        # Normalize aliases coming from different parts of the code/CLI
+        lvl = level.lower()
+        if lvl == "medium":
+            lvl = "normal"
+        if lvl == "smart":
+            lvl = "hard"
+        if lvl not in ("easy", "normal", "hard"):
+            raise ValueError(
+                "Invalid level "
+                f"'{level}'. Choose from 'easy', 'normal' (or 'medium'), 'hard' (or 'smart')."
+            )
+        self.level = lvl
 
-        targets = {"easy": 15, "normal": 20, "smart": 25}
-        target = targets.get(self.level, 20)
+    def should_hold(
+        self,
+        turn_points: int,
+        total_score: int,
+        opponent_score: int,  # currently unused; kept for future strategies
+        goal: int = 100,
+    ) -> bool:
+        """Return True if the CPU should hold this turn."""
+        if self.level == "easy":
+            return turn_points >= self.EASY_THRESHOLD
+        if self.level == "normal":
+            return turn_points >= self.NORMAL_THRESHOLD
+        # hard
+        return (total_score + turn_points) >= (goal - 10)
 
-        # If trailing by a noticeable margin, raise risk tolerance.
-        if total_score + 15 < opponent_score:
-            target += 3
-
-        return turn_score >= target
