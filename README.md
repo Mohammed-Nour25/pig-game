@@ -16,7 +16,7 @@ python -m pig_game
 This will open an interactive shell like:
 
 ```
-🐷 Welcome to Pig! Type 'help' or '?' for available commands.
+Welcome to Pig! Type 'help' or '?' for available commands.
 
 (pig)
 ```
@@ -38,20 +38,20 @@ This will open an interactive shell like:
 Welcome to Pig! Type 'help' or '?' for commands.
 
 ```
-🐷 Welcome to Pig! Type 'help' or '?' for available commands.
+ Welcome to Pig! Type 'help' or '?' for available commands.
 
 (pig) start
-✅ New game started. Goal = 100.
+ New game started. Goal = 100.
 
 ════════════════════════════════════════
-🎯 Goal: 100 | 🎲 Turn points: 0
+ Goal: 100 |  Turn points: 0
 ────────────────────────────────────────
-👉 Player1      | total = 0
+   Player1      | total = 0
    Player2      | total = 0
 ════════════════════════════════════════
 
 (pig) roll
-🎲 Rolled: 1 → 💥 Bust! Switching turn…
+ Rolled: 1 💥 Bust! Switching turn…
 
 (pig) hold
 💾 Points banked. Switching turn…
@@ -202,3 +202,17 @@ Mohammed       CPU    win     150      64         250  2025-10-15T22:32:22Z
 
 ## 📄 License
 This project is licensed under the terms described in [LICENSE.md](LICENSE.md).
+
+
+
+## Regenerating API Documentation
+
+This project uses [pdoc](https://pdoc.dev/) to generate API documentation for the 
+`pig_game` package.
+
+### Steps to regenerate docs
+
+1. Make sure `pdoc` is installed:
+```bash
+python3 -m pip install pdoc
+
