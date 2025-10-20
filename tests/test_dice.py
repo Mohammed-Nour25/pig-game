@@ -28,10 +28,9 @@ def test_sides_constant():
 
 
 def test_multiple_rolls_within_range():
-    """Check that multiple rolls always return values between 1 and 
-SIDES."""
+    """Check that multiple rolls always return values between 1 and
+    SIDES."""
     dice = Dice()
     for _ in range(100):
         result = dice.roll()
         assert 1 <= result <= dice.SIDES
-

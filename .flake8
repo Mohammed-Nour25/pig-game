@@ -1,13 +1,22 @@
 [flake8]
 max-line-length = 120
 extend-ignore =
-    D100,D101,D102,D103,D104,D105,D106,D107
-    D204,D205
-    E302,E305
-    E501
+    E203,
+    E501,
+    W503,
+    D100,
+    D101,
+    D102,
+    D103,
+    D104,
+    D105,
+    D106,
+    D107,
+    D200,
+    D205,
+    D209,
+    D400,
+    D204
 exclude = .git,__pycache__,venv,.venv,build,dist,doc/api,htmlcov
-
-# تخفيف متطلبات الدوكس فقط في الاختبارات أيضًا
 per-file-ignores =
-    tests/*: D100,D101,D102,D103
-
+    tests/*: D100,D101,D102,D103,F401,F841

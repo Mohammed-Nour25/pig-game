@@ -1,3 +1,4 @@
+# tests/test_intelligence.py
 import pytest
 from pig_game.intelligence import Intelligence
 
@@ -7,14 +8,13 @@ from pig_game.intelligence import Intelligence
     [
         ("easy", 15, 0, 0, 100, True),
         ("easy", 14, 0, 0, 100, False),
-        ("medium", 20, 0, 0, 100, True),
+        ("medium", 20, 0, 0, 100, True),   # 'medium' مقبولة كمرادف لـ normal
         ("medium", 19, 0, 0, 100, False),
         ("hard", 5, 80, 0, 100, False),
         ("hard", 15, 85, 0, 100, True),
     ],
 )
-def test_should_hold_behavior(level, turn_points, total, opponent, goal, 
-expected):
+def test_should_hold_behavior(level, turn_points, total, opponent, goal, expected):
     ai = Intelligence(level)
     assert ai.should_hold(turn_points, total, opponent, goal) is expected
 

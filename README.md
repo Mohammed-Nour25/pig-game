@@ -197,3 +197,8 @@ Mohammed       CPU    win     150      64         250  2025-10-15T22:32:22Z
 
 ## 👨‍💻 Contributors
 - **Mohammed Nour** — CLI implementation, AI & HighScore integration, error handling, and documentation.
+
+---
+
+## 📄 License
+This project is licensed under the terms described in [LICENSE.md](LICENSE.md).
