@@ -15,7 +15,8 @@ extend-ignore =
     D200,
     D205,
     D209,
-    D400
+    D400,
+    D204
 exclude = .git,__pycache__,venv,.venv,build,dist,doc/api,htmlcov
 per-file-ignores =
     tests/*: D100,D101,D102,D103,F401,F841

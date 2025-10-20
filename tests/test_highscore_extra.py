@@ -1,6 +1,7 @@
 from pathlib import Path
 from pig_game.highscore import HighScore
 
+
 def test_add_result_alias(tmp_path: Path):
     """Covers the add_result() alias that forwards to record_result()."""
     p = tmp_path / "hs.json"
@@ -12,6 +13,7 @@ def test_add_result_alias(tmp_path: Path):
     table = hs.table()
     stats = {pid: (w, l) for pid, name, w, l in table}
     assert stats[a][0] >= 1  # Alice won at least once via alias
+
 
 def test_add_game_alias(tmp_path: Path):
     """Covers the add_game() alias that forwards to record_result()."""

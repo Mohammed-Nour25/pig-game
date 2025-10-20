@@ -27,6 +27,7 @@ DEFAULT_SCHEMA: Dict[str, Any] = {"players": {}, "games": []}
 @dataclass
 class GameRecord:
     """Single persisted game row."""
+
     p1: str
     p2: str
     winner: str

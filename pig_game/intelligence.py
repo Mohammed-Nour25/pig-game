@@ -1,12 +1,14 @@
 # pig_game/intelligence.py
 from dataclasses import dataclass
 
+
 @dataclass
 class Intelligence:
     """
     Simple, pluggable AI policy for the computer player.
     Levels: easy, normal, smart.
     """
+
     level: str = "normal"
 
     def should_hold(self, turn_score: int, total_score: int, opponent_score: int) -> bool:
