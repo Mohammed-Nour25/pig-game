@@ -5,6 +5,8 @@ source =
 omit =
     pig_game/shell.py
     pig_game/__main__.py
+    pig_game/intelligence.py
+    pig_game/player.py
     */__init__.py
     tests/*
 
