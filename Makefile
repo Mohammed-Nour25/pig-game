@@ -1,4 +1,4 @@
-PYTHON ?= python
+PYTHON ?= python3
 
 .PHONY: help version install lint format test coverage doc uml clean
 # --- Help: show available commands ---
