@@ -238,6 +238,58 @@ class HighScore:
         )
         self._save()
 
+    # --- Simple aliases expected by tests (forward to record_result) ---
+    def add_result(
+        self,
+        p1_id: int,
+        p2_id: int,
+        *,
+        winner: int,
+        score_for: int,
+        score_against: int,
+        duration_sec: int,
+    ) -> None:
+        """
+        Alias to record_result(). Determines 'result' from 'winner'.
+        Interprets score_for/score_against as from p1's perspective (tests do this).
+        """
+        if winner == p1_id:
+            result = "win"
+        elif winner == p2_id:
+            result = "lose"
+        else:
+            raise ValueError("winner must be either p1_id or p2_id")
+        return self.record_result(
+            p1_id,
+            p2_id,
+            result=result,
+            score_for=score_for,
+            score_against=score_against,
+            duration_sec=duration_sec,
+        )
+
+    def add_game(
+        self,
+        p1_id: int,
+        p2_id: int,
+        *,
+        winner: int,
+        score_for: int,
+        score_against: int,
+        duration_sec: int,
+    ) -> None:
+        """
+        Alias to record_result(). Same semantics as add_result().
+        """
+        return self.add_result(
+            p1_id,
+            p2_id,
+            winner=winner,
+            score_for=score_for,
+            score_against=score_against,
+            duration_sec=duration_sec,
+        )
+
     def table(self) -> List[tuple]:
         """
         Return leaderboard rows as 4-tuples to match tests:
