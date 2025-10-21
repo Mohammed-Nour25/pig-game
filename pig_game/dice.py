@@ -1,6 +1,7 @@
 import random
 from typing import Final
 
+
 class Dice:
     """
     A class representing a dice for the Pig game.
@@ -33,18 +34,17 @@ class Dice:
         ValueError
             If sides is not an integer >= 2.
         """
-        if not isinstance(sides, int) or sides < 2: 
+        if not isinstance(sides, int) or sides < 2:
             raise ValueError("sides must be an integer >= 2")
         self.sides = sides
-           
+
     def roll(self) -> int:
         """
         Roll the dice.
-        
+
         Returns
         -------
         int
             A random integer between 1 and `sides` (inclusive).
         """
         return random.randint(1, self.sides)
-

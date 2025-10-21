@@ -45,4 +45,3 @@ class Intelligence:
             return turn_points >= self.NORMAL_THRESHOLD
         # hard
         return (total_score + turn_points) >= (goal - 10)
-
