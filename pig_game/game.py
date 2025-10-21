@@ -1,12 +1,11 @@
 # pig_game/game.py
 from __future__ import annotations
-
+from dataclasses import dataclass  # Can keep or remove this
 import random
 from typing import List, Optional
 
 
-@dataclass
-class Game:
+class Game:  # Removed @dataclass from here
     """
     Minimal Pig game engine for two players, designed to satisfy tests.
 
