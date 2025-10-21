@@ -1,52 +1,40 @@
-"""Player model with minimal functionality to support tests."""
-
+# pig_game/player.py
 from __future__ import annotations
 
-
 class Player:
-    """Represents a Pig game player with name, total score, and turn points."""
+    """Represents a Pig player with total and current-turn points."""
 
-    def __init__(self, name: str, score: int = 0, is_computer: bool = False) -> None:
-        # Basic fields with safe casting
-        self.name: str = str(name)
-        self.total: int = int(score)
-        self.turn: int = 0
-        self.is_computer: bool = bool(is_computer)
-
-    # --- Gameplay helpers ---
-    def add_roll(self, value: int) -> int:
-        """Add a dice roll to the current turn; if 1, bust (turn -> 0)."""
-        v = int(value)
-        if v == 1:
-            self.turn = 0
-        else:
-            self.turn += v
-        return v
-
-    def hold(self) -> str:
-        """Bank current turn points to total, then reset turn."""
-        self.total += self.turn
-        self.turn = 0
-        return "ok"
-
-    def reset(self) -> None:
-        """Reset scores (used by older placeholder tests)."""
+    def __init__(self, name: str = "Player") -> None:
+        self.name = name
         self.total = 0
         self.turn = 0
 
-    # --- API used by the new Player tests ---
-    def add_points(self, points: int) -> None:
-        """Directly add points to total (used by unit tests)."""
-        self.total += int(points)
+    # --- core actions ---
+    def add_roll(self, value: int) -> None:
+        """Add a die value to the current turn, or reset if it's a bust (1)."""
+        if value < 1:
+            raise ValueError("Die value must be >= 1")
+        if value == 1:
+            # Rolling 1 = bust
+            self.reset_turn()
+        else:
+            self.turn += value
 
+    def hold(self) -> None:
+        """Bank the current turn points to total and reset turn."""
+        self.total += self.turn
+        self.turn = 0
+
+    def reset_turn(self) -> None:
+        """Lose current turn points (e.g., when rolling 1)."""
+        self.turn = 0
+
+    # --- utilities ---
     def rename(self, new_name: str) -> None:
-        """Rename the player (no validation needed for tests)."""
-        self.name = str(new_name)
+        new = (new_name or "").strip()
+        if not new:
+            raise ValueError("name cannot be empty")
+        self.name = new
 
-    # --- Introspection ---
-    def __repr__(self) -> str:
-        # Must contain the word "Player" for tests
-        return (
-            f"Player(name={self.name!r}, total={self.total}, "
-            f"turn={self.turn}, is_computer={self.is_computer})"
-        )
+    def __repr__(self) -> str:  # helpful for tests/debugging
+        return f"Player(name={self.name!r}, total={self.total}, turn={self.turn})"
