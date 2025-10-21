@@ -5,6 +5,7 @@ import random
 from typing import List, Optional
 
 
+@dataclass
 class Game:
     """
     Minimal Pig game engine for two players, designed to satisfy tests.

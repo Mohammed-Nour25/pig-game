@@ -6,6 +6,12 @@ from pig_game.player import Player
 def test_player_reset():
     pass
 
+def test_player_bust_resets_turn():
+    """Rolling 1 resets the turn points to zero."""
+    p = Player()
+    p.add_roll(5)
+    p.add_roll(1)
+    assert p.turn == 0
 
 # --- Extra tests to raise coverage for Player ---
 
