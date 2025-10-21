@@ -98,11 +98,7 @@ class PigShell(cmd.Cmd):
                 except Exception:
                     pass
 
-            marker = (
-                "→"
-                if (i == active or bool(_safe_get(p, "is_active", default=False)))
-                else " "
-            )
+            marker = "→" if (i == active or bool(_safe_get(p, "is_active", default=False))) else " "
             print(f"{marker} {name:<12} | total = {total}")
 
         print(_line("═", 40))
@@ -110,9 +106,7 @@ class PigShell(cmd.Cmd):
         # Optional winner line
         if winner:
             if isinstance(winner, int) and 0 <= winner < len(players):
-                win_name = _safe_get(
-                    players[winner], "name", default=f"Player{winner+1}"
-                )
+                win_name = _safe_get(players[winner], "name", default=f"Player{winner+1}")
             elif hasattr(winner, "name"):
                 win_name = _safe_get(winner, "name", default=str(winner))
             else:
@@ -215,9 +209,7 @@ class PigShell(cmd.Cmd):
                 g.cheat(90)  # type: ignore[attr-defined]
             else:
                 players = _safe_get(g, "players") or []
-                active = _as_int(
-                    _safe_get(g, "active_player", "active_index", default=0)
-                )
+                active = _as_int(_safe_get(g, "active_player", "active_index", default=0))
                 if 0 <= int(active) < len(players):
                     p = players[int(active)]
                     if hasattr(p, "score"):
@@ -242,9 +234,7 @@ class PigShell(cmd.Cmd):
 
         try:
             players = _safe_get(self.game, "players") or []
-            active = _as_int(
-                _safe_get(self.game, "active_player", "active_index", default=0)
-            )
+            active = _as_int(_safe_get(self.game, "active_player", "active_index", default=0))
             if 0 <= int(active) < len(players):
                 setattr(players[int(active)], "name", new)
                 print(f"✅ Name set to '{new}'")

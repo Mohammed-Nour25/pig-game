@@ -11,11 +11,11 @@ DEFAULT_STORE = os.path.join(os.path.expanduser("~"), ".pig_highscores.json")
 class HighScoreEntry:
     player: str
     opponent: str
-    result: str        # "win" or "lose"
+    result: str  # "win" or "lose"
     score_for: int
     score_against: int
     duration_sec: int
-    when_utc: str      # ISO timestamp
+    when_utc: str  # ISO timestamp
 
 
 def _utc_now() -> str:
@@ -104,7 +104,10 @@ class HighScore:
         normalized = {"players": players, "games": games}
 
         # Persist normalized structure only if needed
-        if raw != {"players": {str(k): v for k, v in players.items()}, "games": games}:  # pragma: no cover (schema fix path)
+        if raw != {
+            "players": {str(k): v for k, v in players.items()},
+            "games": games,
+        }:  # pragma: no cover (schema fix path)
             self._write_raw(normalized)  # pragma: no cover
         return normalized
 
@@ -299,10 +302,16 @@ class HighScore:
         - best_win_duration asc (None last)
         - name asc
         """
+
         def sort_key(p: Dict[str, Any]):
             bwd = p.get("best_win_duration")
             bwd_key = 10**9 if bwd is None else int(bwd)
-            return (-int(p.get("wins", 0)), -int(p.get("scored_for", 0)), bwd_key, p.get("name", ""))
+            return (
+                -int(p.get("wins", 0)),
+                -int(p.get("scored_for", 0)),
+                bwd_key,
+                p.get("name", ""),
+            )
 
         rows: List[tuple] = []
         for p in sorted(self._by_id.values(), key=sort_key):
@@ -313,7 +322,9 @@ class HighScore:
     def add(self, entry: HighScoreEntry) -> None:  # pragma: no cover (not used by tests)
         p1 = self.register_player(entry.player)
         p2 = self.register_player(entry.opponent)
-        self.record_result(p1, p2, entry.result, entry.score_for, entry.score_against, entry.duration_sec)
+        self.record_result(
+            p1, p2, entry.result, entry.score_for, entry.score_against, entry.duration_sec
+        )
 
     def top(self, limit: int = 10) -> List[HighScoreEntry]:  # pragma: no cover (not used by tests)
         out: List[HighScoreEntry] = []
@@ -327,7 +338,9 @@ class HighScore:
                     result="win" if wins >= losses else "lose",
                     score_for=p["scored_for"],
                     score_against=p["scored_against"],
-                    duration_sec=p["best_win_duration"] if p["best_win_duration"] is not None else 0,
+                    duration_sec=(
+                        p["best_win_duration"] if p["best_win_duration"] is not None else 0
+                    ),
                     when_utc=_utc_now(),
                 )
             )

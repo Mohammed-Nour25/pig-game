@@ -1,10 +1,12 @@
 import pytest
 from pig_game.player import Player
 
+
 # Keep only this placeholder test skipped (not the whole file)
 @pytest.mark.skip(reason="Skeleton-only placeholder, not part of this assignment.")
 def test_player_reset():
     pass
+
 
 def test_player_bust_resets_turn():
     """Rolling 1 resets the turn points to zero."""
@@ -13,7 +15,9 @@ def test_player_bust_resets_turn():
     p.add_roll(1)
     assert p.turn == 0
 
+
 # --- Extra tests to raise coverage for Player ---
+
 
 def test_add_zero_points_is_allowed():
     p = Player("Alice")
@@ -51,7 +55,9 @@ def test_score_accumulation_multiple_adds():
     p.add_points(7)
     assert p.total == 10
 
+
 # --- Extra coverage tests for Player core methods ---
+
 
 def test_add_roll_accumulates_and_busts():
     p = Player("Rolla")
@@ -102,4 +108,3 @@ def test_rename_is_applied_and_reflected_in_repr():
     p.rename("Y")
     r = repr(p)
     assert p.name == "Y" and "Player" in r and "Y" in r
-

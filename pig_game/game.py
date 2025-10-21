@@ -1,11 +1,11 @@
 # pig_game/game.py
 from __future__ import annotations
-from dataclasses import dataclass  # Can keep or remove this
+
 import random
 from typing import List, Optional
 
 
-class Game:  # Removed @dataclass from here
+class Game:
     """
     Minimal Pig game engine for two players, designed to satisfy tests.
 
@@ -51,6 +51,7 @@ class Game:  # Removed @dataclass from here
     def hold(self) -> str:
         """
         Bank current turn points to total.
+
         If the player reaches goal, return 'win' and DO NOT switch.
         Otherwise switch and return 'ok'.
         """
@@ -98,5 +99,5 @@ class Game:  # Removed @dataclass from here
         return self.scores[idx] >= self.goal
 
     def cheat(self) -> None:
-        """Testing helper: add 90 points to the current player's total."""
+        """Add 90 points to current player for testing purposes."""
         self.scores[self.current] += 90
