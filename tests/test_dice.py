@@ -1,5 +1,4 @@
 import pytest
- HEAD
 import random
 from pig_game.dice import Dice
 
@@ -44,5 +43,3 @@ def test_roll_returns_valid_value():
         value = dice.roll()
         assert 1 <= value <= 6
         assert isinstance(value, int)
-
- Implement Dice.roll() and add unit tests

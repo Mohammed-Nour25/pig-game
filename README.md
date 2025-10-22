@@ -216,3 +216,20 @@ This project uses [pdoc](https://pdoc.dev/) to generate API documentation for th
 ```bash
 python3 -m pip install pdoc
 
+# Pig Game
+
+A Python implementation of the Pig Game — a simple dice game built with 
+modular, test-driven development.
+
+---
+
+## Development and Testing
+
+This project uses a `Makefile` to simplify common development tasks.
+
+### Setup
+
+Install all required dependencies:
+```bash
+make install
+
