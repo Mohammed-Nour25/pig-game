@@ -1,0 +1,15 @@
+digraph "packages_pig_game" {
+rankdir=BT
+charset="utf-8"
+"pig_game" [color="black", label=<pig_game>, shape="box", style="solid"];
+"pig_game.__main__" [color="black", label=<pig_game.__main__>, shape="box", style="solid"];
+"pig_game.dice" [color="black", label=<pig_game.dice>, shape="box", style="solid"];
+"pig_game.game" [color="black", label=<pig_game.game>, shape="box", style="solid"];
+"pig_game.highscore" [color="black", label=<pig_game.highscore>, shape="box", style="solid"];
+"pig_game.highscore.backup" [color="black", label=<pig_game.highscore.backup>, shape="box", style="solid"];
+"pig_game.intelligence" [color="black", label=<pig_game.intelligence>, shape="box", style="solid"];
+"pig_game.player" [color="black", label=<pig_game.player>, shape="box", style="solid"];
+"pig_game.shell" [color="black", label=<pig_game.shell>, shape="box", style="solid"];
+"pig_game.__main__" -> "pig_game.shell" [arrowhead="open", arrowtail="none"];
+"pig_game.shell" -> "pig_game.game" [arrowhead="open", arrowtail="none"];
+}

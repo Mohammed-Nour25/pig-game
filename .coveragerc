@@ -1,0 +1,19 @@
+[run]
+branch = True
+source =
+    pig_game
+omit =
+    pig_game/shell.py
+    pig_game/__main__.py
+    pig_game/intelligence.py
+    pig_game/player.py
+    */__init__.py
+    tests/*
+
+[report]
+show_missing = True
+skip_covered = False
+fail_under = 90
+
+[html]
+directory = htmlcov
