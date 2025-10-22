@@ -36,7 +36,8 @@ format:
 
 # --- Run tests ---
 test:
-	pytest -q
+        PYTHONPATH=. pytest -q
+
 
 # --- Coverage (HTML + console) ---
 coverage:

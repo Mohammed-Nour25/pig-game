@@ -37,6 +37,15 @@
                                 <a class="function" href="#Intelligence.__init__">Intelligence</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Intelligence.EASY_THRESHOLD">EASY_THRESHOLD</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Intelligence.NORMAL_THRESHOLD">NORMAL_THRESHOLD</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Intelligence.level">level</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Intelligence.should_hold">should_hold</a>
                         </li>
                 </ul>
@@ -58,36 +67,58 @@
                     <h1 class="modulename">
 <a href="./../pig_game.html">pig_game</a><wbr>.intelligence    </h1>
 
-                        <div class="docstring"><p>AI Intelligence (skeleton).
-TODO (M2):</p>
-
-<ul>
-<li>Implement Intelligence with levels easy/medium/hard</li>
-<li>Method: should_hold(turn_points, total_score, opponent_score, goal) -> bool</li>
-<li>≥90% coverage, docstrings, type hints</li>
-</ul>
-</div>
-
+                
                         <input id="mod-intelligence-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 
                         <label class="view-source-button" for="mod-intelligence-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;AI Intelligence (skeleton).</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="sd">TODO (M2):</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">- Implement Intelligence with levels easy/medium/hard</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">- Method: should_hold(turn_points, total_score, opponent_score, goal) -&gt; bool</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="sd">- ≥90% coverage, docstrings, type hints</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Intelligence</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple AI policy (skeleton).&quot;&quot;&quot;</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Implement Intelligence for M2&quot;</span><span class="p">)</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">goal</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Implement Intelligence.should_hold for M2&quot;</span><span class="p">)</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="c1"># pig_game/intelligence.py</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Final</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Intelligence</span><span class="p">:</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">    Tiny policy for CPU decisions in Pig.</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">    Levels:</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">        - easy   : hold when turn_points &gt;= 15</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">        - normal : hold when turn_points &gt;= 20 (alias: medium)</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">        - hard   : hold when total_score + turn_points &gt;= goal - 10 (alias: smart)</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="n">EASY_THRESHOLD</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>    <span class="n">NORMAL_THRESHOLD</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>        <span class="c1"># Normalize aliases coming from different parts of the code/CLI</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>        <span class="n">lvl</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;medium&quot;</span><span class="p">:</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>            <span class="n">lvl</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;smart&quot;</span><span class="p">:</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>            <span class="n">lvl</span> <span class="o">=</span> <span class="s2">&quot;hard&quot;</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;easy&quot;</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;hard&quot;</span><span class="p">):</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>                <span class="s2">&quot;Invalid level &quot;</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&#39;. Choose from &#39;easy&#39;, &#39;normal&#39; (or &#39;medium&#39;), &#39;hard&#39; (or &#39;smart&#39;).&quot;</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>            <span class="p">)</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">lvl</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_hold</span><span class="p">(</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>        <span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>        <span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>        <span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># currently unused; kept for future strategies</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>        <span class="n">goal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the CPU should hold this turn.&quot;&quot;&quot;</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;easy&quot;</span><span class="p">:</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>            <span class="k">return</span> <span class="n">turn_points</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">EASY_THRESHOLD</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>            <span class="k">return</span> <span class="n">turn_points</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NORMAL_THRESHOLD</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>        <span class="c1"># hard</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>        <span class="k">return</span> <span class="p">(</span><span class="n">total_score</span> <span class="o">+</span> <span class="n">turn_points</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="n">goal</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -103,17 +134,56 @@ TODO (M2):</p>
 
     </div>
     <a class="headerlink" href="#Intelligence"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Intelligence-11"><a href="#Intelligence-11"><span class="linenos">11</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Intelligence</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="Intelligence-12"><a href="#Intelligence-12"><span class="linenos">12</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple AI policy (skeleton).&quot;&quot;&quot;</span>
-</span><span id="Intelligence-13"><a href="#Intelligence-13"><span class="linenos">13</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="Intelligence-14"><a href="#Intelligence-14"><span class="linenos">14</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Implement Intelligence for M2&quot;</span><span class="p">)</span>
-</span><span id="Intelligence-15"><a href="#Intelligence-15"><span class="linenos">15</span></a>
-</span><span id="Intelligence-16"><a href="#Intelligence-16"><span class="linenos">16</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">goal</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="Intelligence-17"><a href="#Intelligence-17"><span class="linenos">17</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Implement Intelligence.should_hold for M2&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Intelligence-8"><a href="#Intelligence-8"><span class="linenos"> 8</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Intelligence</span><span class="p">:</span>
+</span><span id="Intelligence-9"><a href="#Intelligence-9"><span class="linenos"> 9</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Intelligence-10"><a href="#Intelligence-10"><span class="linenos">10</span></a><span class="sd">    Tiny policy for CPU decisions in Pig.</span>
+</span><span id="Intelligence-11"><a href="#Intelligence-11"><span class="linenos">11</span></a>
+</span><span id="Intelligence-12"><a href="#Intelligence-12"><span class="linenos">12</span></a><span class="sd">    Levels:</span>
+</span><span id="Intelligence-13"><a href="#Intelligence-13"><span class="linenos">13</span></a><span class="sd">        - easy   : hold when turn_points &gt;= 15</span>
+</span><span id="Intelligence-14"><a href="#Intelligence-14"><span class="linenos">14</span></a><span class="sd">        - normal : hold when turn_points &gt;= 20 (alias: medium)</span>
+</span><span id="Intelligence-15"><a href="#Intelligence-15"><span class="linenos">15</span></a><span class="sd">        - hard   : hold when total_score + turn_points &gt;= goal - 10 (alias: smart)</span>
+</span><span id="Intelligence-16"><a href="#Intelligence-16"><span class="linenos">16</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="Intelligence-17"><a href="#Intelligence-17"><span class="linenos">17</span></a>
+</span><span id="Intelligence-18"><a href="#Intelligence-18"><span class="linenos">18</span></a>    <span class="n">EASY_THRESHOLD</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15</span>
+</span><span id="Intelligence-19"><a href="#Intelligence-19"><span class="linenos">19</span></a>    <span class="n">NORMAL_THRESHOLD</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+</span><span id="Intelligence-20"><a href="#Intelligence-20"><span class="linenos">20</span></a>
+</span><span id="Intelligence-21"><a href="#Intelligence-21"><span class="linenos">21</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Intelligence-22"><a href="#Intelligence-22"><span class="linenos">22</span></a>        <span class="c1"># Normalize aliases coming from different parts of the code/CLI</span>
+</span><span id="Intelligence-23"><a href="#Intelligence-23"><span class="linenos">23</span></a>        <span class="n">lvl</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="Intelligence-24"><a href="#Intelligence-24"><span class="linenos">24</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;medium&quot;</span><span class="p">:</span>
+</span><span id="Intelligence-25"><a href="#Intelligence-25"><span class="linenos">25</span></a>            <span class="n">lvl</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+</span><span id="Intelligence-26"><a href="#Intelligence-26"><span class="linenos">26</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;smart&quot;</span><span class="p">:</span>
+</span><span id="Intelligence-27"><a href="#Intelligence-27"><span class="linenos">27</span></a>            <span class="n">lvl</span> <span class="o">=</span> <span class="s2">&quot;hard&quot;</span>
+</span><span id="Intelligence-28"><a href="#Intelligence-28"><span class="linenos">28</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;easy&quot;</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;hard&quot;</span><span class="p">):</span>
+</span><span id="Intelligence-29"><a href="#Intelligence-29"><span class="linenos">29</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="Intelligence-30"><a href="#Intelligence-30"><span class="linenos">30</span></a>                <span class="s2">&quot;Invalid level &quot;</span>
+</span><span id="Intelligence-31"><a href="#Intelligence-31"><span class="linenos">31</span></a>                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&#39;. Choose from &#39;easy&#39;, &#39;normal&#39; (or &#39;medium&#39;), &#39;hard&#39; (or &#39;smart&#39;).&quot;</span>
+</span><span id="Intelligence-32"><a href="#Intelligence-32"><span class="linenos">32</span></a>            <span class="p">)</span>
+</span><span id="Intelligence-33"><a href="#Intelligence-33"><span class="linenos">33</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">lvl</span>
+</span><span id="Intelligence-34"><a href="#Intelligence-34"><span class="linenos">34</span></a>
+</span><span id="Intelligence-35"><a href="#Intelligence-35"><span class="linenos">35</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_hold</span><span class="p">(</span>
+</span><span id="Intelligence-36"><a href="#Intelligence-36"><span class="linenos">36</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="Intelligence-37"><a href="#Intelligence-37"><span class="linenos">37</span></a>        <span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="Intelligence-38"><a href="#Intelligence-38"><span class="linenos">38</span></a>        <span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="Intelligence-39"><a href="#Intelligence-39"><span class="linenos">39</span></a>        <span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># currently unused; kept for future strategies</span>
+</span><span id="Intelligence-40"><a href="#Intelligence-40"><span class="linenos">40</span></a>        <span class="n">goal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+</span><span id="Intelligence-41"><a href="#Intelligence-41"><span class="linenos">41</span></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="Intelligence-42"><a href="#Intelligence-42"><span class="linenos">42</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the CPU should hold this turn.&quot;&quot;&quot;</span>
+</span><span id="Intelligence-43"><a href="#Intelligence-43"><span class="linenos">43</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;easy&quot;</span><span class="p">:</span>
+</span><span id="Intelligence-44"><a href="#Intelligence-44"><span class="linenos">44</span></a>            <span class="k">return</span> <span class="n">turn_points</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">EASY_THRESHOLD</span>
+</span><span id="Intelligence-45"><a href="#Intelligence-45"><span class="linenos">45</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
+</span><span id="Intelligence-46"><a href="#Intelligence-46"><span class="linenos">46</span></a>            <span class="k">return</span> <span class="n">turn_points</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NORMAL_THRESHOLD</span>
+</span><span id="Intelligence-47"><a href="#Intelligence-47"><span class="linenos">47</span></a>        <span class="c1"># hard</span>
+</span><span id="Intelligence-48"><a href="#Intelligence-48"><span class="linenos">48</span></a>        <span class="k">return</span> <span class="p">(</span><span class="n">total_score</span> <span class="o">+</span> <span class="n">turn_points</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="n">goal</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Simple AI policy (skeleton).</p>
+            <div class="docstring"><p>Tiny policy for CPU decisions in Pig.</p>
+
+<p>Levels:
+    - easy   : hold when turn_points &gt;= 15
+    - normal : hold when turn_points &gt;= 20 (alias: medium)
+    - hard   : hold when total_score + turn_points &gt;= goal - 10 (alias: smart)</p>
 </div>
 
 
@@ -121,17 +191,63 @@ TODO (M2):</p>
                                         <input id="Intelligence.__init__-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
             
-        <span class="name">Intelligence</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;medium&#39;</span></span>)</span>
+        <span class="name">Intelligence</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span></span>)</span>
 
                 <label class="view-source-button" for="Intelligence.__init__-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Intelligence.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Intelligence.__init__-13"><a href="#Intelligence.__init__-13"><span class="linenos">13</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="Intelligence.__init__-14"><a href="#Intelligence.__init__-14"><span class="linenos">14</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Implement Intelligence for M2&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Intelligence.__init__-21"><a href="#Intelligence.__init__-21"><span class="linenos">21</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Intelligence.__init__-22"><a href="#Intelligence.__init__-22"><span class="linenos">22</span></a>        <span class="c1"># Normalize aliases coming from different parts of the code/CLI</span>
+</span><span id="Intelligence.__init__-23"><a href="#Intelligence.__init__-23"><span class="linenos">23</span></a>        <span class="n">lvl</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="Intelligence.__init__-24"><a href="#Intelligence.__init__-24"><span class="linenos">24</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;medium&quot;</span><span class="p">:</span>
+</span><span id="Intelligence.__init__-25"><a href="#Intelligence.__init__-25"><span class="linenos">25</span></a>            <span class="n">lvl</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+</span><span id="Intelligence.__init__-26"><a href="#Intelligence.__init__-26"><span class="linenos">26</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;smart&quot;</span><span class="p">:</span>
+</span><span id="Intelligence.__init__-27"><a href="#Intelligence.__init__-27"><span class="linenos">27</span></a>            <span class="n">lvl</span> <span class="o">=</span> <span class="s2">&quot;hard&quot;</span>
+</span><span id="Intelligence.__init__-28"><a href="#Intelligence.__init__-28"><span class="linenos">28</span></a>        <span class="k">if</span> <span class="n">lvl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;easy&quot;</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;hard&quot;</span><span class="p">):</span>
+</span><span id="Intelligence.__init__-29"><a href="#Intelligence.__init__-29"><span class="linenos">29</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="Intelligence.__init__-30"><a href="#Intelligence.__init__-30"><span class="linenos">30</span></a>                <span class="s2">&quot;Invalid level &quot;</span>
+</span><span id="Intelligence.__init__-31"><a href="#Intelligence.__init__-31"><span class="linenos">31</span></a>                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&#39;. Choose from &#39;easy&#39;, &#39;normal&#39; (or &#39;medium&#39;), &#39;hard&#39; (or &#39;smart&#39;).&quot;</span>
+</span><span id="Intelligence.__init__-32"><a href="#Intelligence.__init__-32"><span class="linenos">32</span></a>            <span class="p">)</span>
+</span><span id="Intelligence.__init__-33"><a href="#Intelligence.__init__-33"><span class="linenos">33</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">lvl</span>
 </span></pre></div>
 
 
+    
+
+                            </div>
+                            <div id="Intelligence.EASY_THRESHOLD" class="classattr">
+                                <div class="attr variable">
+            <span class="name">EASY_THRESHOLD</span><span class="annotation">: Final[int]</span>        =
+<span class="default_value">15</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Intelligence.EASY_THRESHOLD"></a>
+    
+    
+
+                            </div>
+                            <div id="Intelligence.NORMAL_THRESHOLD" class="classattr">
+                                <div class="attr variable">
+            <span class="name">NORMAL_THRESHOLD</span><span class="annotation">: Final[int]</span>        =
+<span class="default_value">20</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Intelligence.NORMAL_THRESHOLD"></a>
+    
+    
+
+                            </div>
+                            <div id="Intelligence.level" class="classattr">
+                                <div class="attr variable">
+            <span class="name">level</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Intelligence.level"></a>
+    
     
 
                             </div>
@@ -140,18 +256,32 @@ TODO (M2):</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">should_hold</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">goal</span><span class="p">:</span> <span class="nb">int</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+        <span class="name">should_hold</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">goal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
 
                 <label class="view-source-button" for="Intelligence.should_hold-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Intelligence.should_hold"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Intelligence.should_hold-16"><a href="#Intelligence.should_hold-16"><span class="linenos">16</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">goal</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="Intelligence.should_hold-17"><a href="#Intelligence.should_hold-17"><span class="linenos">17</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Implement Intelligence.should_hold for M2&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Intelligence.should_hold-35"><a href="#Intelligence.should_hold-35"><span class="linenos">35</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">should_hold</span><span class="p">(</span>
+</span><span id="Intelligence.should_hold-36"><a href="#Intelligence.should_hold-36"><span class="linenos">36</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="Intelligence.should_hold-37"><a href="#Intelligence.should_hold-37"><span class="linenos">37</span></a>        <span class="n">turn_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="Intelligence.should_hold-38"><a href="#Intelligence.should_hold-38"><span class="linenos">38</span></a>        <span class="n">total_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="Intelligence.should_hold-39"><a href="#Intelligence.should_hold-39"><span class="linenos">39</span></a>        <span class="n">opponent_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># currently unused; kept for future strategies</span>
+</span><span id="Intelligence.should_hold-40"><a href="#Intelligence.should_hold-40"><span class="linenos">40</span></a>        <span class="n">goal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+</span><span id="Intelligence.should_hold-41"><a href="#Intelligence.should_hold-41"><span class="linenos">41</span></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="Intelligence.should_hold-42"><a href="#Intelligence.should_hold-42"><span class="linenos">42</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the CPU should hold this turn.&quot;&quot;&quot;</span>
+</span><span id="Intelligence.should_hold-43"><a href="#Intelligence.should_hold-43"><span class="linenos">43</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;easy&quot;</span><span class="p">:</span>
+</span><span id="Intelligence.should_hold-44"><a href="#Intelligence.should_hold-44"><span class="linenos">44</span></a>            <span class="k">return</span> <span class="n">turn_points</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">EASY_THRESHOLD</span>
+</span><span id="Intelligence.should_hold-45"><a href="#Intelligence.should_hold-45"><span class="linenos">45</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
+</span><span id="Intelligence.should_hold-46"><a href="#Intelligence.should_hold-46"><span class="linenos">46</span></a>            <span class="k">return</span> <span class="n">turn_points</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NORMAL_THRESHOLD</span>
+</span><span id="Intelligence.should_hold-47"><a href="#Intelligence.should_hold-47"><span class="linenos">47</span></a>        <span class="c1"># hard</span>
+</span><span id="Intelligence.should_hold-48"><a href="#Intelligence.should_hold-48"><span class="linenos">48</span></a>        <span class="k">return</span> <span class="p">(</span><span class="n">total_score</span> <span class="o">+</span> <span class="n">turn_points</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="n">goal</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Return True if the CPU should hold this turn.</p>
+</div>
+
 
                             </div>
                 </section>
