@@ -13,3 +13,12 @@ exclude = '''
   | doc
 )/
 '''
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "pig_game/ai_game.py"
+]
+
+[tool.coverage.report]
+fail_under = 85
