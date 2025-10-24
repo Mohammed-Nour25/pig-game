@@ -393,3 +393,18 @@ make doc
 ---
 
 **Happy Gaming! 🎲✨**
+
+
+## 🎬 Video Demonstration
+
+[**Watch Project Video Presentation**](https://youtu.be/n_nbSjPXyz4)
+
+**Video includes:**
+- Introduction and project overview
+- Game demonstration (CLI gameplay)
+- AI opponent demonstration
+- Comprehensive testing (87% coverage)
+- API documentation and UML diagrams
+- Code quality walkthrough
+
+**Duration:** 9-10 minutes
